@@ -2,14 +2,104 @@
 title: "Assignment 1"
 ---
 
-# Assignment 1
+a.Cem Vardar, an industrial engineer with over 20 years of experience, explains that industrial engineering deals with complex problems, and often simpler solutions are more functional and feasible. He emphasizes that data science is not a profession in itself, but rather a helpful tool for problem-solving.
 
+He gives examples of how data science was used in areas such as credit scoring, fraud detection, and cost-efficiency analysis at Carvana, where he previously worked. Technical skills in SQL, Python, and Excel are essential.
+
+b.Why aren't complex solutions always better than simple solutions?
+Complex solutions are more costly, more time-consuming, and carry a higher risk of error and uncertainty.
+
+Which of the following is best to learn last for a candidate who wants to get started in data science at basic level? 
+a. Excel
+b. Python
+c. Neural Nets
+d. SQL
+e. Regression
+
+c.Explore Statistical Summaries with Custom Functions and Iteration Methods:
 ```{r}
-1 + 1
+compute_stats <- function(x) {
+  if (!is.numeric(x)) {
+    stop("Error: It should take a numeric vector!")
+  }
+  
+  stats_list <- list(
+    mean = mean(x),
+    median = median(x),
+    variance = var(x),
+    iqr = IQR(x),
+    min = min(x),
+    max = max(x)
+  )
+  return(stats_list)
+}
+
+
+for (col in colnames(mtcars)) {
+  cat("Column name:", col,"\n")
+  print(compute_stats(mtcars[[col]]))
+}
+
+
+sapply(mtcars, compute_stats)
+
+apply(mtcars, 2, compute_stats)
+
 ```
+d. polls_us_election_2016 data set task:
+```{r}
+my_first <- "Miray"
+my_birth_year <- 2002
 
-My first assignment has two parts.
+# Install and load dslabs package
+library(dslabs)
 
-## (a)
+# Import data
+data(polls_us_election_2016)
 
-## (b)
+# Calculate k
+k <- (nchar(my_first) + my_birth_year) %% 15 + 8
+print(k)
+
+# Display k rows based on whether k is even or odd
+if (k %% 2 == 0) {
+  head(polls_us_election_2016, k)
+} else {
+  tail(polls_us_election_2016, k)
+}
+
+# Total NA values in entire dataset
+total_na <- sum(is.na(polls_us_election_2016))
+print(total_na)
+
+# NA values per column, sorted from largest to smallest (top 8)
+na_per_column <- colSums(is.na(polls_us_election_2016))
+na_per_column_sorted <- sort(na_per_column, decreasing = TRUE)[1:8]
+print(na_per_column_sorted)
+
+
+new_data <- polls_us_election_2016
+
+for (col in colnames(new_data)) {
+  if (is.numeric(new_data[[col]])) {
+    new_data[[col]][is.na(new_data[[col]])] <- my_birth_year + k
+  } else {
+    new_data[[col]] <- as.character(new_data[[col]])
+    new_data[[col]][is.na(new_data[[col]])] <- paste0(my_first, "_", k)
+  }
+}
+
+# Display k rows of new data frame
+if (k %% 2 == 0) {
+  print(head(new_data, k))
+} else {
+  print(tail(new_data, k))
+}
+
+# Total NA values in new data frame
+print(sum(is.na(new_data)))
+
+# Check if any NA values remain
+print(anyNA(new_data))
+
+```

@@ -4,3 +4,5 @@ sidebar: false
 ---
 
 This page is under construction.
+
+![](assets/images/tlc.gif){fig-align="center"}

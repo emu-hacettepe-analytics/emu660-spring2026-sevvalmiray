@@ -3,38 +3,25 @@ title: "About Me"
 sidebar: false 
 ---
 
-![](assets/images/vesikalik.jpeg){fig-align="center"}
+![](assets/images/vesikalik1.jpeg){fig-align="center"}
 
 # Education
 
--   B.S., ................................., ....................................University, Turkey, 20xx - 20xx.
--   M.S., Industrial Engineering, Hacettepe University, Turkey, 20xx - ongoing.
--   Ph.D.., Industrial Engineering, Hacettepe University, Turkey, 20xx - ongoing.
-
-# Work Experience
-
-## Employements
-
-1.  Firm xxx, position xx, year xxx
-
-2.  Firm yyy, position yyy, year yyy
+-   B.S., Industrial Engineering, Ankara Yildirim Beyazit University, Turkey, 2021-2025
+-   M.S., Industrial Engineering, Hacettepe University, Turkey, 2026 - ongoing.
 
 ## Internships
 
-1.  Firm aaa, position xx, year xxx
-
-2.  Firm bbb, position yyy, year yyy
+1.  TAI, Production Planning Intern, 2024
 
 # Projects
 
-1.  TUBİTAK 1001..........................
+1.  TUBİTAK 2209-A The Mediating Role of the Digital Product Passport (DPP) in the Industry 4.0 Ecosystem for Circular Economy Efficiency
 
-# Publications
-
-1.  Dasdemir, E., Batta, R., Koksalan, M., Tezcaner Ozturk, D. (2022) “UAV Routing for Reconnaissance Mission: A Multi-Objective Orienteering Problem with Time-Dependent Prizes and Multiple Connections”, Computers & Operations Research, 145: 105882.
 
 # Competencies
 
 R, Quarto, Git, Python
 
 # Hobbies
+Piano, Violin, Books
