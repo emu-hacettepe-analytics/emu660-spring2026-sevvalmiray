@@ -42,9 +42,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-dc61dccf6db8fd9416e1204158b08c6a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-521981a8940135a76b4a303cca0f53aa.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-dc61dccf6db8fd9416e1204158b08c6a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-4d4b8f14ed55ebad8b755e943176241e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-5e496a0005638d79d8ee6bd274fd2ca8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-4d4b8f14ed55ebad8b755e943176241e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -74,7 +74,6 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -306,8 +305,8 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#education" id="toc-education" class="nav-link active" data-scroll-target="#education">Education</a>
   <ul class="collapse">
   <li><a href="#internships" id="toc-internships" class="nav-link" data-scroll-target="#internships">Internships</a></li>
-  </ul></li>
   <li><a href="#projects" id="toc-projects" class="nav-link" data-scroll-target="#projects">Projects</a></li>
+  </ul></li>
   <li><a href="#competencies" id="toc-competencies" class="nav-link" data-scroll-target="#competencies">Competencies</a></li>
   <li><a href="#hobbies" id="toc-hobbies" class="nav-link" data-scroll-target="#hobbies">Hobbies</a></li>
   </ul>
@@ -320,6 +319,31 @@ ul.task-list li input[type="checkbox"] {
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
+<div id="scroll-progress-bar"></div>
+
+<style>
+  #scroll-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 5px;
+    background: var(--link-color);
+    z-index: 9999;
+    transition: width 0.1s ease;
+    border-radius: 0 2px 2px 0;
+  }
+</style>
+
+<script>
+  window.addEventListener('scroll', function () {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    document.getElementById('scroll-progress-bar').style.width = progress + '%';
+  });
+
+</script>
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
@@ -342,7 +366,7 @@ ul.task-list li input[type="checkbox"] {
 
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="assets/images/vesikalik1.jpeg" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+<p><img src="assets/images/vesikalik.jpeg" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
 </figure>
 </div>
 <section id="education" class="level1">
@@ -357,12 +381,12 @@ ul.task-list li input[type="checkbox"] {
 <li>TAI, Production Planning Intern, 2024</li>
 </ol>
 </section>
-</section>
-<section id="projects" class="level1">
-<h1>Projects</h1>
+<section id="projects" class="level2">
+<h2 class="anchored" data-anchor-id="projects">Projects</h2>
 <ol type="1">
 <li>TUBİTAK 2209-A The Mediating Role of the Digital Product Passport (DPP) in the Industry 4.0 Ecosystem for Circular Economy Efficiency</li>
 </ol>
+</section>
 </section>
 <section id="competencies" class="level1">
 <h1>Competencies</h1>

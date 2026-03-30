@@ -1,0 +1,175 @@
+/*-- scss:rules --*/
+
+/* ══════════════════════════════════════
+   CSS STYLES - Miray's Analytics Lab
+══════════════════════════════════════ */
+
+/* ── Geçiş animasyonu ── */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ══ LIGHT MODE ══ */
+body.quarto-light {
+  --bs-body-bg: #fefefd;
+  --bs-body-color: #000;
+  --bs-navbar-bg: rgba(221, 247, 150, 1);
+  --bs-border-color: rgba(0, 0, 0, 0.1);
+  --link-color: #f54291;
+  --code-bg: #f6f3ef;
+}
+
+/* ══ DARK MODE ══ */
+body.quarto-dark {
+  --bs-body-bg: #1a1815;
+  --bs-body-color: #f0ebe5;
+  --bs-navbar-bg: rgba(26, 24, 21, 1);
+  --bs-border-color: rgba(240, 235, 229, 0.1);
+  --link-color: #ddf796;
+  --code-bg: #1f1a15;
+}
+
+/* ── Body ── */
+body {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  font-family: 'Arial', sans-serif;
+}
+/* ── Sidebar yazı rengi (light mode) ── */
+body.quarto-light .sidebar,
+body.quarto-light .sidebar .nav-link,
+body.quarto-light .sidebar-item-text {
+  color: #000 !important;
+}
+
+/* ── Navbar ── */
+.navbar {
+  background-color: var(--bs-navbar-bg) !important;
+  border-bottom: 1px solid var(--bs-border-color);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.navbar .nav-link,
+.navbar .navbar-brand,
+.navbar .dropdown-toggle {
+  color: var(--bs-body-color) !important;
+}
+/* ── Navbar yazı rengi (light mode) ── */
+body.quarto-light .navbar .nav-link,
+body.quarto-light .navbar .navbar-brand,
+body.quarto-light .navbar .dropdown-toggle {
+  color: #000 !important;
+}
+
+/* ── Linkler ── */
+a {
+  color: var(--link-color) !important;
+  text-decoration: none;
+}
+a:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+/* ── Kod blokları ── */
+pre, code {
+  background-color: var(--code-bg) !important;
+  color: var(--bs-body-color);
+  border-radius: 6px;
+  font-size: 0.875em;
+  padding: 2px 6px;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  border-right: 1px solid var(--bs-border-color);
+}
+
+
+/* ── TOC ── */
+#TOC a {
+  font-size: 0.875rem;
+  color: var(--bs-body-color);
+  opacity: 0.8;
+}
+#TOC a:hover {
+  opacity: 1;
+}
+
+/* ── Footer ── */
+.nav-footer {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+/* ── Callout kutuları ── */
+.callout {
+  border-radius: 8px;
+}
+
+/* ── Navbar dropdown item hover efekti ── */
+.navbar .dropdown-menu .dropdown-item {
+  border-radius: 6px;
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.2s ease !important;
+}
+
+.navbar .dropdown-menu .dropdown-item:hover {
+  transform: translateX(3px);
+}
+
+body.quarto-light .navbar .dropdown-menu .dropdown-item:hover {
+  background-color: #f54291 !important;
+  color: #fff !important;
+  text-decoration: none !important;
+}
+
+body.quarto-dark .navbar .dropdown-menu .dropdown-item:hover {
+  background-color: #ddf796 !important;
+  color: #1a1815 !important;
+  -webkit-text-fill-color: #1a1815 !important;
+  text-decoration: none !important;
+}
+
+/* Back to top butonu (Tam Sabitleme) ── */
+#quarto-back-to-top {
+  background-color: var(--link-color) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 50px !important;
+  padding: 8px 18px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2) !important;
+  opacity: 0.9;
+  
+  /* Kaymayı ve dış etkileri engellemek için kritik ayarlar */
+  transform: translate(0, 0) !important; 
+  text-decoration: none !important;
+  transition: box-shadow 0.2s ease, opacity 0.3s ease, background-color 0.2s ease !important;
+}
+
+/* Navbar animasyonundan sızan hayalet çizgiyi öldür */
+#quarto-back-to-top::after, 
+#quarto-back-to-top::before {
+  content: none !important;
+  display: none !important;
+}
+
+body.quarto-dark #quarto-back-to-top {
+  color: #1a1815 !important;
+  -webkit-text-fill-color: #1a1815 !important;
+}
+
+/* Tüm hover/focus durumlarında yerinde çakılı kalması için */
+#quarto-back-to-top:hover,
+#quarto-back-to-top:focus,
+#quarto-back-to-top:active {
+  transform: translate(0, 0) !important; /* Hareket etme */
+  margin: 0 !important;                  /* Kenar boşluklarını sıfırla */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22) !important;
+  opacity: 1 !important;
+  text-decoration: none !important;
+}

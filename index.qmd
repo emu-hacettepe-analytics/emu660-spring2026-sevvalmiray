@@ -1,9 +1,10 @@
 ---
-title: "Welcome to My Analytics Lab"
+title: "Welcome to my Analytics Lab!"
+sidebar: false
 ---
 
-Hello!! My name is Şevval Miray Başar.
+Welcome! I'm Şevval Miray Başar 👋
 
-This is my personal webpage.
+This is where I blend data analytics. Explore my projects, thoughts as I navigate the fascinating world of data-driven decision making.
 
-Please stay tuned to follow my works on data analytics, blog posts, and more.
+Happy surfing!

@@ -2,9 +2,9 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Welcome to My Analytics Lab",
+    "title": "Welcome to my Analytics Lab!",
     "section": "",
-    "text": "Hello!! My name is Şevval Miray Başar.\nThis is my personal webpage.\nPlease stay tuned to follow my works on data analytics, blog posts, and more.\n\n\n\n Back to top"
+    "text": "Welcome! I’m Şevval Miray Başar 👋\nThis is where I blend data analytics. Explore my projects, thoughts as I navigate the fascinating world of data-driven decision making.\nHappy surfing!\n\n\n\n Back to top"
   },
   {
     "objectID": "project.html",
@@ -96,7 +96,7 @@
   {
     "objectID": "posts.html",
     "href": "posts.html",
-    "title": "My Blog",
+    "title": "Posts",
     "section": "",
     "text": "This page is under construction.\n\n\n\n\n\n\n\n\n Back to top"
   },
@@ -133,5 +133,19 @@
     "title": "About Me",
     "section": "",
     "text": "{fig-align=“center width=”20px”}"
+  },
+  {
+    "objectID": "index.html#title-mirays-analytics-lab",
+    "href": "index.html#title-mirays-analytics-lab",
+    "title": "Miray's Analytics Lab",
+    "section": "title: “Miray’s Analytics Lab”",
+    "text": "title: “Miray’s Analytics Lab”\nHello!! My name is Şevval Miray Başar.\nThis is my personal webpage.\nPlease stay tuned to follow my works on data analytics, blog posts, and more."
+  },
+  {
+    "objectID": "about.html#projects",
+    "href": "about.html#projects",
+    "title": "About Me",
+    "section": "Projects",
+    "text": "Projects\n\nTUBİTAK 2209-A The Mediating Role of the Digital Product Passport (DPP) in the Industry 4.0 Ecosystem for Circular Economy Efficiency"
   }
 ]

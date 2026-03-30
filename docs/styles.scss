@@ -1,0 +1,92 @@
+/* ══════════════════════════════════════
+   CSS STYLES - Miray's Analytics Lab
+══════════════════════════════════════ */
+/* ── Geçiş animasyonu ── */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+/* ══ LIGHT MODE ══ */
+body.quarto-light {
+  --bs-body-bg: #fefefd;
+  --bs-body-color: #000;
+  --bs-navbar-bg: #f3efea;
+  --bs-border-color: rgba(0, 0, 0, 0.1);
+  --link-color: #957856;
+  --code-bg: #f6f3ef;
+}
+
+/* ══ DARK MODE ══ */
+body.quarto-dark {
+  --bs-body-bg: #2a2520;
+  --bs-body-color: #f0ebe5;
+  --bs-navbar-bg: #1a1815;
+  --bs-border-color: rgba(240, 235, 229, 0.1);
+  --link-color: #d4b5a0;
+  --code-bg: #1f1a15;
+}
+
+/* ── Body ── */
+body {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  font-family: 'Arial', sans-serif;
+}
+/* ── Navbar ── */
+html[data-bs-theme="light"] .navbar {
+  background-color: #D3DAD9 !important;
+}
+html[data-bs-theme="light"] .navbar .nav-link,
+html[data-bs-theme="light"] .navbar .navbar-brand,
+html[data-bs-theme="light"] .navbar .dropdown-toggle {
+  color: #1a1a1a !important;
+}
+html[data-bs-theme="dark"] .navbar {
+  background-color: #2A2540 !important;
+}
+html[data-bs-theme="dark"] .navbar .nav-link,
+html[data-bs-theme="dark"] .navbar .navbar-brand,
+html[data-bs-theme="dark"] .navbar .dropdown-toggle {
+  color: #e0e0e0 !important;
+}
+.navbar {
+  border-bottom: 1px solid var(--bs-border-color);
+}
+/* ── Linkler ── */
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+a:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+/* ── Kod blokları ── */
+pre, code {
+  background-color: var(--code-bg);
+  border-radius: 6px;
+  font-size: 0.875em;
+  padding: 2px 6px;
+}
+/* ── Sidebar ── */
+.sidebar {
+  border-right: 1px solid var(--bs-border-color);
+}
+/* ── TOC ── */
+#TOC a {
+  font-size: 0.875rem;
+  color: var(--bs-body-color);
+  opacity: 0.8;
+}
+#TOC a:hover {
+  opacity: 1;
+}
+/* ── Footer ── */
+.nav-footer {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  border-top: 1px solid var(--bs-border-color);
+}
+/* ── Callout kutuları ── */
+.callout {
+  border-radius: 8px;
+}

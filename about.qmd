@@ -3,7 +3,7 @@ title: "About Me"
 sidebar: false 
 ---
 
-![](assets/images/vesikalik1.jpeg){fig-align="center"}
+![](assets/images/vesikalik.jpeg){fig-align="center"}
 
 # Education
 
@@ -14,14 +14,14 @@ sidebar: false
 
 1.  TAI, Production Planning Intern, 2024
 
-# Projects
+## Projects
 
 1.  TUBİTAK 2209-A The Mediating Role of the Digital Product Passport (DPP) in the Industry 4.0 Ecosystem for Circular Economy Efficiency
-
 
 # Competencies
 
 R, Quarto, Git, Python
 
 # Hobbies
+
 Piano, Violin, Books

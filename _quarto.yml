@@ -44,10 +44,10 @@ format:
   html:
     toc: true
     toc-location: left
-    theme: 
-      light: simplex 
-      dark: cyborg
-    css: styles.css
+    theme:
+      light: [default, styles.scss]
+      dark: [darkly, styles.scss]
+    include-before-body: assets/progress-bar.html
 
 
 editor: visual

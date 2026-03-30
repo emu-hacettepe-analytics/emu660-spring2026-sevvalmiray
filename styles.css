@@ -1,1 +1,95 @@
-/* css styles */
+/* ══════════════════════════════════════
+   CSS STYLES - Miray's Analytics Lab
+══════════════════════════════════════ */
+
+/* ── Geçiş animasyonu ── */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+}
+
+/* ══ LIGHT MODE ══ */
+[data-bs-theme="light"] {
+  --bs-body-bg: #fefefd !important;
+  --bs-body-color: #000 !important;
+  --bs-navbar-bg: #f3efea !important;
+  --bs-border-color: rgba(0, 0, 0, 0.1) !important;
+  --link-color: #957856 !important;
+  --code-bg: #f6f3ef !important;
+}
+
+/* ══ DARK MODE ══ */
+[data-bs-theme="dark"] {
+  --bs-body-bg: #2a2520 !important;
+  --bs-body-color: #f0ebe5 !important;
+  --bs-navbar-bg: #1a1815 !important;
+  --bs-border-color: rgba(240, 235, 229, 0.1) !important;
+  --link-color: #d4b5a0 !important;
+  --code-bg: #1f1a15 !important;
+}
+
+/* ── Body ── */
+body {
+  background-color: var(--bs-body-bg) !important;
+  color: var(--bs-body-color) !important;
+  font-family: 'Arial', sans-serif !important;
+}
+
+/* ── Navbar ── */
+.navbar {
+  background-color: var(--bs-navbar-bg) !important;
+  border-bottom: 1px solid var(--bs-border-color) !important;
+}
+
+.navbar .nav-link,
+.navbar .navbar-brand,
+.navbar .dropdown-toggle {
+  color: var(--bs-body-color) !important;
+}
+
+/* ── Linkler ── */
+a {
+  color: var(--link-color) !important;
+  text-decoration: none !important;
+}
+
+a:hover {
+  opacity: 0.75 !important;
+  text-decoration: underline !important;
+}
+
+/* ── Kod blokları ── */
+pre, code {
+  background-color: var(--code-bg) !important;
+  color: var(--bs-body-color) !important;
+  border-radius: 6px !important;
+  font-size: 0.875em !important;
+  padding: 2px 6px !important;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  border-right: 1px solid var(--bs-border-color) !important;
+}
+
+/* ── TOC ── */
+#TOC a {
+  font-size: 0.875rem !important;
+  color: var(--bs-body-color) !important;
+  opacity: 0.8 !important;
+}
+
+#TOC a:hover {
+  opacity: 1 !important;
+}
+
+/* ── Footer ── */
+.nav-footer {
+  font-size: 0.85rem !important;
+  opacity: 0.7 !important;
+  border-top: 1px solid var(--bs-border-color) !important;
+}
+
+/* ── Callout kutuları ── */
+.callout {
+  border-radius: 8px !important;
+}
