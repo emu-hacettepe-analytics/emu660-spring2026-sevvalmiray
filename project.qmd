@@ -2,56 +2,199 @@
 title: "Project X"
 ---
 
-Welcome to my/our project page.
+Welcome to our project page.
 
-Keep an eye on this space to stay updated with my project activities.
+Keep an eye on this space to stay updated with our project activities.
 
-(The titles below are provided as examples; please feel free to adjust them as necessary.)
+
+---
+title: "Population Movements After the February 6, 2023 Earthquake"
+authors: Büşra Halil and Şevval Miray Başar
+date: 06.04.2026
+format: html
+code-fold: true
+---
 
 # 1. Project Overview and Scope
 
-xxxxxx
+The February 6, 2023 Kahramanmaraş earthquakes, with magnitudes 
+of 7.7 and 7.6, are among the deadliest natural disasters in 
+Turkey's modern history. The disaster caused widespread destruction 
+across 11 provinces, displacing hundreds of thousands of people 
+and triggering one of the largest internal migration movements 
+the country has ever seen.
+
+This project analyzes the demographic impact of the earthquakes 
+by examining population changes in the affected provinces before 
+and after the disaster. Using TurkStat's Address-Based Population 
+Registration System (ADNKS), the study investigates how the 
+earthquakes reshaped population distribution across Turkey.
+
+**Research questions:**
+
+- How did the populations of the 11 affected provinces change 
+  between 2022 and 2023?
+- Which provinces experienced the greatest population loss?
+- Is there a relationship between earthquake damage intensity 
+  and population decline?
+
+**Objectives:**
+
+- Quantify the population loss in earthquake-affected provinces
+- Identify migration patterns following the disaster
+- Visualize the demographic impact through maps and charts
 
 # 2. Data
+## Data
 
-xxxxxx
+This project uses two complementary datasets from TurkStat (TÜİK):
 
-## 2.1 Data Source
+**1. Address-Based Population Registration System (ADNKS)**  
+Provincial population figures for the 11 earthquake-affected 
+provinces across 2018–2025, used to quantify overall population 
+change before and after the disaster.
 
-xxxxxx
+**2. Inter-Provincial Migration Statistics**  
+The primary dataset for this analysis. It records migration flows 
+between all province pairs where at least one province is among 
+the 11 earthquake-affected provinces, covering 2018–2025. Each 
+row represents a directed province pair for a given year and 
+includes the following variables:
+
+| Variable | Description |
+|---|---|
+| `Yıl` | Year (2018–2025) |
+| `Göç Alan İl` | Receiving province |
+| `Göç Veren İl` | Sending province |
+| `Göç Alan İl Nüfus` | Population of receiving province |
+| `Göç Veren İl Nüfus` | Population of sending province |
+| `Aldığı Göç` | In-migration count |
+| `Verdiği Göç` | Out-migration count |
+| `Net Göç` | Net migration (in minus out) |
+
+The dataset contains 13,200 observations. The 2023 records 
+capture migration flows immediately following the February 6 
+earthquakes, enabling a direct before-and-after comparison of 
+migration patterns.
+
+**Sources:** TurkStat ADNKS & Inter-Provincial Migration 
+Statistics — [data.tuik.gov.tr](https://data.tuik.gov.tr)  
+**RData file:** [deprem_goc.RData](your_github_link_here)
+```{r}
+#| message: false
+#| warning: false
+
+library(readxl)
+library(tidyverse)
+
+# Population data
+df_nufus <- read_excel("tr_nufus.xlsx")
+
+# Migration data
+df_goc <- read_excel("deprem_goc_ham_filtreli.xlsx", skip = 2)
+
+save(df_nufus, df_goc, file = "deprem_goc.RData")
+
+glimpse(df_goc)
+```
 
 ## 2.2 General Information About Data
 
-xxxxxx
+The dataset covers the 11 provinces directly affected by the 
+February 6, 2023 earthquakes: Kahramanmaraş, Hatay, Adıyaman, 
+Malatya, Gaziantep, Şanlıurfa, Diyarbakır, Kilis, Osmaniye, 
+Adana, and Elazığ.
+
+Each observation corresponds to one province and includes the 
+following variables:
+
+| Variable | Description | Type |
+|---|---|---|
+| `province` | Province name | Character |
+| `population_22` | Population before earthquake (2022) | Numeric |
+| `population_23` | Population after earthquake (2023) | Numeric |
+| `growth_rate` | Annual population growth rate (‰) | Numeric |
+| `pop_change` | Population change (persons) | Numeric |
+
 
 ## 2.3 Reason of Choice
 
-xxxxxx
+This dataset  is publicly available, regularly updated, and directly published 
+by TurkStat, ensuring reliability. Also, the 2022 and 2023 
+editions capture the population status immediately before and 
+after the earthquakes, making it ideal for measuring the 
+demographic impact. Additionally, the provincial level of granularity 
+is well-suited for comparative analysis across the affected region.
+
+The February 6 earthquakes represent a critical turning point 
+in Turkey's demographic landscape. Studying their impact on 
+population movement contributes to our understanding of how 
+large-scale disasters reshape human geography.
 
 ## 2.4 Preprocessing
 
-xxxxxx
+The raw data was downloaded from TurkStat in Excel format. 
+The following preprocessing steps were applied:
 
-# 3. Analysis
+1. **Column selection:** Only the province name, population and annual growth rate columns were retained.
+2. **Province filtering:** The dataset was filtered to include 
+   only the 11 earthquake-affected provinces.
+3. **Type conversion:** Population figures contained spaces as 
+   thousand separators and were converted to numeric format.
+4. **Derived variable:** A population change variable (`pop_change`) 
+   was computed as the difference between 2023 and 2022 populations.
+```{r}
+#| message: false
+#| warning: false
+#| label: data-preprocessing
 
-xxxxxx
+library(readxl)
+library(tidyverse)
 
-## 3.1 Exploratory Data Analysis
+earthquake_provinces <- c("Kahramanmaraş", "Hatay", "Adıyaman",
+                          "Malatya", "Gaziantep", "Şanlıurfa",
+                          "Diyarbakır", "Kilis", "Osmaniye",
+                          "Adana", "Elazığ")
 
-xxxxxx
+df_raw <- read_excel("adnks_il.xls", skip = 2)
 
-## 3.2 Trend Analysis
+df <- df_raw |>
+  rename(
+    province      = 1,
+    population_22 = 2,
+    population_23 = 3,
+    growth_rate   = 10
+  ) |>
+  select(province, population_22, population_23, growth_rate) |>
+  filter(province %in% earthquake_provinces) |>
+  mutate(
+    population_22 = as.numeric(gsub(" ", "", population_22)),
+    population_23 = as.numeric(gsub(" ", "", population_23)),
+    growth_rate   = as.numeric(growth_rate),
+    pop_change    = population_23 - population_22
+  )
 
-xxxxxx
+save(df, file = "deprem_goc.RData")
+```
+```{r}
+#| label: data-overview
+#| tbl-cap: "Population change in earthquake-affected provinces (2022–2023)"
 
-## 3.3 Model Fitting
+df |>
+  arrange(growth_rate) |>
+  knitr::kable(
+    col.names = c("Province", "Population 2022", "Population 2023",
+                  "Growth Rate (‰)", "Change (persons)"),
+    format.args = list(big.mark = ",")
+  )
+df <- read_excel("tr_nufus.xlsx")
 
-xxxxxx
+save(df, file = "deprem_goc.RData")
 
-## 3.4 Results
+glimpse(df)
+```
+```
 
-xxxxxx
 
-# 4. Results and Key Takeaways
 
-xxxxxx
+

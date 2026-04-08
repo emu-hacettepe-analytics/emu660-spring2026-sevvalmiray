@@ -20,8 +20,73 @@ sidebar: false
 
 # Competencies
 
-R, Quarto, Git, Python
+
+::: {.grid}
+
+::: {.g-col-4}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">📊</div>
+  <div style="font-weight: 500;">R</div>
+  <div style="font-size: 0.8rem; opacity: 0.65; margin-top: 2px;"></div>
+</div>
+:::
+
+::: {.g-col-4}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">🐍</div>
+  <div style="font-weight: 500;">Python</div>
+  <div style="font-size: 0.8rem; opacity: 0.65; margin-top: 2px;"></div>
+</div>
+:::
+
+::: {.g-col-4}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">🌿</div>
+  <div style="font-weight: 500;">Git</div>
+  <div style="font-size: 0.8rem; opacity: 0.65; margin-top: 2px;"></div>
+</div>
+:::
+
+::: {.g-col-4}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">📝</div>
+  <div style="font-weight: 500;">Quarto</div>
+  <div style="font-size: 0.8rem; opacity: 0.65; margin-top: 2px;"></div>
+</div>
+:::
+
+:::
 
 # Hobbies
 
-Piano, Violin, Books
+::: {.grid}
+
+::: {.g-col-3}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">🎹</div>
+  <div style="font-weight: 500;">Piano</div>
+</div>
+:::
+
+::: {.g-col-3}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">🎻</div>
+  <div style="font-weight: 500;">Violin</div>
+</div>
+:::
+
+::: {.g-col-3}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">📚</div>
+  <div style="font-weight: 500;">Books</div>
+</div>
+:::
+
+::: {.g-col-3}
+<div style="background: var(--bs-body-bg); border: 0.5px solid var(--bs-border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 6px;">🧱</div>
+  <div style="font-weight: 500;">Lego</div>
+</div>
+:::
+
+:::

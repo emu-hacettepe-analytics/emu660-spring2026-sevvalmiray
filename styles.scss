@@ -1,3 +1,16 @@
+/*-- scss:uses --*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap');
+
+/*-- scss:defaults --*/
+$font-family-sans-serif: 'Inter', sans-serif;
+$headings-font-family: 'Playfair Display', serif;
+
+/*-- scss:rules --*/
+
+/*-- scss:defaults --*/
+$font-family-sans-serif: 'Inter', sans-serif;
+$headings-font-family: 'Playfair Display', serif;
+
 /*-- scss:rules --*/
 
 /* ══════════════════════════════════════
@@ -29,12 +42,27 @@ body.quarto-dark {
   --code-bg: #1f1a15;
 }
 
-/* ── Body ── */
+//* ── Body ── */
 body {
   background-color: var(--bs-body-bg);
   color: var(--bs-body-color);
-  font-family: 'Arial', sans-serif;
+  font-family: 'Inter', sans-serif !important;
 }
+
+/* ── Başlıklar ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif !important;
+}
+
+/* ── Navbar font override ── */
+.navbar .nav-link,
+.navbar .navbar-brand,
+.navbar .dropdown-toggle,
+.navbar .dropdown-item {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1rem !important;
+}
+
 /* ── Sidebar yazı rengi (light mode) ── */
 body.quarto-light .sidebar,
 body.quarto-light .sidebar .nav-link,

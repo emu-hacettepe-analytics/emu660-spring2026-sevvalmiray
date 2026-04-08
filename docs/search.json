@@ -9,37 +9,37 @@
   {
     "objectID": "project.html",
     "href": "project.html",
-    "title": "Project X",
+    "title": "Population Movements After the February 6, 2023 Earthquake",
     "section": "",
-    "text": "Welcome to my/our project page.\nKeep an eye on this space to stay updated with my project activities.\n(The titles below are provided as examples; please feel free to adjust them as necessary.)"
+    "text": "Welcome to our project page.\nKeep an eye on this space to stay updated with our project activities."
   },
   {
     "objectID": "project.html#data-source",
     "href": "project.html#data-source",
-    "title": "Project X",
+    "title": "Population Movements After the February 6, 2023 Earthquake",
     "section": "2.1 Data Source",
-    "text": "2.1 Data Source\nxxxxxx"
+    "text": "2.1 Data Source\nThe primary data source is the Address-Based Population Registration System (ADNKS), published annually by TurkStat (TÜİK). ADNKS is an administrative database that records the residential addresses of all individuals registered in Turkey, providing reliable and comprehensive population figures at the provincial level.\nSource: TurkStat ADNKS, 2023\nURL: data.tuik.gov.tr\nRData file: deprem_goc.RData"
   },
   {
     "objectID": "project.html#general-information-about-data",
     "href": "project.html#general-information-about-data",
-    "title": "Project X",
+    "title": "Population Movements After the February 6, 2023 Earthquake",
     "section": "2.2 General Information About Data",
-    "text": "2.2 General Information About Data\nxxxxxx"
+    "text": "2.2 General Information About Data\nThe dataset covers the 11 provinces directly affected by the February 6, 2023 earthquakes: Kahramanmaraş, Hatay, Adıyaman, Malatya, Gaziantep, Şanlıurfa, Diyarbakır, Kilis, Osmaniye, Adana, and Elazığ.\nEach observation corresponds to one province and includes the following variables:\n\n\n\nVariable\nDescription\nType\n\n\n\n\nprovince\nProvince name\nCharacter\n\n\npopulation_22\nPopulation before earthquake (2022)\nNumeric\n\n\npopulation_23\nPopulation after earthquake (2023)\nNumeric\n\n\ngrowth_rate\nAnnual population growth rate (‰)\nNumeric\n\n\npop_change\nPopulation change (persons)\nNumeric"
   },
   {
     "objectID": "project.html#reason-of-choice",
     "href": "project.html#reason-of-choice",
-    "title": "Project X",
+    "title": "Population Movements After the February 6, 2023 Earthquake",
     "section": "2.3 Reason of Choice",
-    "text": "2.3 Reason of Choice\nxxxxxx"
+    "text": "2.3 Reason of Choice\nThis dataset is publicly available, regularly updated, and directly published by TurkStat, ensuring reliability. Also, the 2022 and 2023 editions capture the population status immediately before and after the earthquakes, making it ideal for measuring the demographic impact. Additionally, the provincial level of granularity is well-suited for comparative analysis across the affected region.\nThe February 6 earthquakes represent a critical turning point in Turkey’s demographic landscape. Studying their impact on population movement contributes to our understanding of how large-scale disasters reshape human geography."
   },
   {
     "objectID": "project.html#preprocessing",
     "href": "project.html#preprocessing",
-    "title": "Project X",
+    "title": "Population Movements After the February 6, 2023 Earthquake",
     "section": "2.4 Preprocessing",
-    "text": "2.4 Preprocessing\nxxxxxx"
+    "text": "2.4 Preprocessing\nThe raw data was downloaded from TurkStat in Excel format. The following preprocessing steps were applied:\n\nColumn selection: Only the province name, population and annual growth rate columns were retained.\nProvince filtering: The dataset was filtered to include only the 11 earthquake-affected provinces.\nType conversion: Population figures contained spaces as thousand separators and were converted to numeric format.\nDerived variable: A population change variable (pop_change) was computed as the difference between 2023 and 2022 populations.\n\n\n\nCode\nlibrary(readxl)\nlibrary(tidyverse)\n\nearthquake_provinces &lt;- c(\"Kahramanmaraş\", \"Hatay\", \"Adıyaman\",\n                          \"Malatya\", \"Gaziantep\", \"Şanlıurfa\",\n                          \"Diyarbakır\", \"Kilis\", \"Osmaniye\",\n                          \"Adana\", \"Elazığ\")\n\ndf_raw &lt;- read_excel(\"adnks_il.xls\", skip = 2)\n\ndf &lt;- df_raw |&gt;\n  rename(\n    province      = 1,\n    population_22 = 2,\n    population_23 = 3,\n    growth_rate   = 10\n  ) |&gt;\n  select(province, population_22, population_23, growth_rate) |&gt;\n  filter(province %in% earthquake_provinces) |&gt;\n  mutate(\n    population_22 = as.numeric(gsub(\" \", \"\", population_22)),\n    population_23 = as.numeric(gsub(\" \", \"\", population_23)),\n    growth_rate   = as.numeric(growth_rate),\n    pop_change    = population_23 - population_22\n  )\n\nsave(df, file = \"deprem_goc.RData\")\n\n\n\n\nCode\ndf |&gt;\n  arrange(growth_rate) |&gt;\n  knitr::kable(\n    col.names = c(\"Province\", \"Population 2022\", \"Population 2023\",\n                  \"Growth Rate (‰)\", \"Change (persons)\"),\n    format.args = list(big.mark = \",\")\n  )\n\n\n\nPopulation change in earthquake-affected provinces (2022–2023)\n\n\n\n\n\n\n\n\n\nProvince\nPopulation 2022\nPopulation 2023\nGrowth Rate (‰)\nChange (persons)\n\n\n\n\nAdana\n2,274,106\n2,270,298\nNA\n-3,808\n\n\nAdıyaman\n635,169\n604,978\nNA\n-30,191\n\n\nDiyarbakır\n1,804,880\n1,818,133\nNA\n13,253\n\n\nElazığ\n591,497\n604,411\nNA\n12,914\n\n\nGaziantep\n2,154,051\n2,164,134\nNA\n10,083\n\n\nHatay\n1,686,043\n1,544,640\nNA\n-141,403\n\n\nMalatya\n812,580\n742,725\nNA\n-69,855\n\n\nKahramanmaraş\n1,177,436\n1,116,618\nNA\n-60,818\n\n\nŞanlıurfa\n2,170,110\n2,213,964\nNA\n43,854\n\n\nKilis\n147,919\n155,179\nNA\n7,260\n\n\nOsmaniye\n559,405\n557,666\nNA\n-1,739\n\n\n\n\n\nCode\ndf &lt;- read_excel(\"tr_nufus.xlsx\")\n\nsave(df, file = \"deprem_goc.RData\")\n\nglimpse(df)\n\n\nRows: 88\nColumns: 5\n$ Yıl    &lt;dbl&gt; 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2018, 2019, 202…\n$ İl     &lt;chr&gt; \"ADANA\", \"ADANA\", \"ADANA\", \"ADANA\", \"ADANA\", \"ADANA\", \"ADANA\", …\n$ Toplam &lt;dbl&gt; 2220125, 2237940, 2258718, 2263373, 2274106, 2270298, 2280484, …\n$ Erkek  &lt;dbl&gt; 1106811, 1117032, 1127516, 1130862, 1137455, 1135046, 1140836, …\n$ Kadın  &lt;dbl&gt; 1113314, 1120908, 1131202, 1132511, 1136651, 1135252, 1139648, …\n\n\n```"
   },
   {
     "objectID": "project.html#exploratory-data-analysis",
@@ -147,5 +147,12 @@
     "title": "About Me",
     "section": "Projects",
     "text": "Projects\n\nTUBİTAK 2209-A The Mediating Role of the Digital Product Passport (DPP) in the Industry 4.0 Ecosystem for Circular Economy Efficiency"
+  },
+  {
+    "objectID": "project.html#data-1",
+    "href": "project.html#data-1",
+    "title": "Population Movements After the February 6, 2023 Earthquake",
+    "section": "Data",
+    "text": "Data\nThis project uses two complementary datasets from TurkStat (TÜİK):\n1. Address-Based Population Registration System (ADNKS)\nProvincial population figures for the 11 earthquake-affected provinces across 2018–2025, used to quantify overall population change before and after the disaster.\n2. Inter-Provincial Migration Statistics\nThe primary dataset for this analysis. It records migration flows between all province pairs where at least one province is among the 11 earthquake-affected provinces, covering 2018–2025. Each row represents a directed province pair for a given year and includes the following variables:\n\n\n\nVariable\nDescription\n\n\n\n\nYıl\nYear (2018–2025)\n\n\nGöç Alan İl\nReceiving province\n\n\nGöç Veren İl\nSending province\n\n\nGöç Alan İl Nüfus\nPopulation of receiving province\n\n\nGöç Veren İl Nüfus\nPopulation of sending province\n\n\nAldığı Göç\nIn-migration count\n\n\nVerdiği Göç\nOut-migration count\n\n\nNet Göç\nNet migration (in minus out)\n\n\n\nThe dataset contains 13,200 observations. The 2023 records capture migration flows immediately following the February 6 earthquakes, enabling a direct before-and-after comparison of migration patterns.\nSources: TurkStat ADNKS & Inter-Provincial Migration Statistics — data.tuik.gov.tr\nRData file: deprem_goc.RData\n\n\nCode\nlibrary(readxl)\nlibrary(tidyverse)\n\n# Population data\ndf_nufus &lt;- read_excel(\"tr_nufus.xlsx\")\n\n# Migration data\ndf_goc &lt;- read_excel(\"deprem_goc_ham_filtreli.xlsx\", skip = 2)\n\nsave(df_nufus, df_goc, file = \"deprem_goc.RData\")\n\nglimpse(df_goc)\n\n\nRows: 13,200\nColumns: 8\n$ Yıl                  &lt;dbl&gt; 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2018, 2…\n$ `Göç Alan İl Adı`    &lt;chr&gt; \"ADANA\", \"ADANA\", \"ADANA\", \"ADANA\", \"ADANA\", \"ADA…\n$ `Göç Veren İl Adı`   &lt;chr&gt; \"ADIYAMAN\", \"AFYONKARAHİSAR\", \"AKSARAY\", \"AMASYA\"…\n$ `Göç Alan İl Nüfus`  &lt;dbl&gt; 2220125, 2220125, 2220125, 2220125, 2220125, 2220…\n$ `Göç Veren İl Nüfus` &lt;dbl&gt; 624513, 725568, 412172, 337508, 5503985, 2426356,…\n$ `Aldığı Göç`         &lt;dbl&gt; 734, 252, 457, 157, 2589, 1542, 50, 134, 374, 195…\n$ `Verdiği Göç`        &lt;dbl&gt; 909, 259, 698, 145, 3944, 3091, 110, 143, 528, 25…\n$ `Net Göç`            &lt;dbl&gt; -175, -7, -241, 12, -1355, -1549, -60, -9, -154, …"
   }
 ]

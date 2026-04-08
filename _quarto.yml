@@ -48,6 +48,10 @@ format:
       light: [default, styles.scss]
       dark: [darkly, styles.scss]
     include-before-body: assets/progress-bar.html
+    include-in-header:
+      text: |
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
 
 
 editor: visual
