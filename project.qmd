@@ -1,200 +1,1224 @@
 ---
-title: "Project X"
+title: "The February 6, 2023 Kahramanmaraş Earthquake and Migration Dynamics"
+subtitle: "Damage, Displacement, and Recovery in 11 Earthquake-Affected Provinces"
+author: "Şevval Miray Başar and Büşra Halil"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    number-sections: true
+    fig-width: 9
+    fig-height: 5
+    fig-dpi: 150
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+    css: styles.css
+  pdf:
+    colorlinks: true
+    papersize: a4
+    fontsize: 11pt
+    margin-left: 2cm
+    margin-right: 2cm
+    margin-top: 2cm
+    margin-bottom: 2cm
+execute:
+  echo: false
+  warning: false
+  message: false
 ---
 
-Welcome to our project page.
+```{r setup}
+#| include: false
 
-Keep an eye on this space to stay updated with our project activities.
-
-
----
-title: "Population Movements After the February 6, 2023 Earthquake"
-authors: Büşra Halil and Şevval Miray Başar
-date: 06.04.2026
-format: html
-code-fold: true
----
-
-# 1. Project Overview and Scope
-
-The February 6, 2023 Kahramanmaraş earthquakes, with magnitudes 
-of 7.7 and 7.6, are among the deadliest natural disasters in 
-Turkey's modern history. The disaster caused widespread destruction 
-across 11 provinces, displacing hundreds of thousands of people 
-and triggering one of the largest internal migration movements 
-the country has ever seen.
-
-This project analyzes the demographic impact of the earthquakes 
-by examining population changes in the affected provinces before 
-and after the disaster. Using TurkStat's Address-Based Population 
-Registration System (ADNKS), the study investigates how the 
-earthquakes reshaped population distribution across Turkey.
-
-**Research questions:**
-
-- How did the populations of the 11 affected provinces change 
-  between 2022 and 2023?
-- Which provinces experienced the greatest population loss?
-- Is there a relationship between earthquake damage intensity 
-  and population decline?
-
-**Objectives:**
-
-- Quantify the population loss in earthquake-affected provinces
-- Identify migration patterns following the disaster
-- Visualize the demographic impact through maps and charts
-
-# 2. Data
-## Data
-
-This project uses two complementary datasets from TurkStat (TÜİK):
-
-**1. Address-Based Population Registration System (ADNKS)**  
-Provincial population figures for the 11 earthquake-affected 
-provinces across 2018–2025, used to quantify overall population 
-change before and after the disaster.
-
-**2. Inter-Provincial Migration Statistics**  
-The primary dataset for this analysis. It records migration flows 
-between all province pairs where at least one province is among 
-the 11 earthquake-affected provinces, covering 2018–2025. Each 
-row represents a directed province pair for a given year and 
-includes the following variables:
-
-| Variable | Description |
-|---|---|
-| `Yıl` | Year (2018–2025) |
-| `Göç Alan İl` | Receiving province |
-| `Göç Veren İl` | Sending province |
-| `Göç Alan İl Nüfus` | Population of receiving province |
-| `Göç Veren İl Nüfus` | Population of sending province |
-| `Aldığı Göç` | In-migration count |
-| `Verdiği Göç` | Out-migration count |
-| `Net Göç` | Net migration (in minus out) |
-
-The dataset contains 13,200 observations. The 2023 records 
-capture migration flows immediately following the February 6 
-earthquakes, enabling a direct before-and-after comparison of 
-migration patterns.
-
-**Sources:** TurkStat ADNKS & Inter-Provincial Migration 
-Statistics — [data.tuik.gov.tr](https://data.tuik.gov.tr)  
-**RData file:** [deprem_goc.RData](your_github_link_here)
-```{r}
-#| message: false
-#| warning: false
-
-library(readxl)
 library(tidyverse)
+library(readxl)
+library(janitor)
+library(scales)
+library(ggrepel)
+library(sf)
+library(leaflet)
+library(htmltools)
+library(geojsonsf)
+library(glue)
+library(knitr)
 
-# Population data
-df_nufus <- read_excel("tr_nufus.xlsx")
+knitr::opts_chunk$set(
+  echo = knitr::is_html_output()
+)
 
-# Migration data
-df_goc <- read_excel("deprem_goc_ham_filtreli.xlsx", skip = 2)
+PROJE <- "."
 
-save(df_nufus, df_goc, file = "deprem_goc.RData")
+normalize_city <- function(x) {
+  x |>
+    stringr::str_to_upper(locale = "tr") |>
+    stringi::stri_trans_general("Latin-ASCII") |>
+    stringr::str_trim()
+}
 
-glimpse(df_goc)
+num_clean <- function(x) {
+  readr::parse_number(
+    as.character(x),
+    locale = readr::locale(grouping_mark = ".", decimal_mark = ",")
+  )
+}
+
+EQ_KEYS <- c(
+  "ADANA", "ADIYAMAN", "DIYARBAKIR", "ELAZIG", "GAZIANTEP",
+  "HATAY", "KAHRAMANMARAS", "KILIS", "MALATYA", "OSMANIYE", "SANLIURFA"
+)
+
+PROVINCE_LABELS <- c(
+  "ADANA" = "Adana",
+  "ADIYAMAN" = "Adıyaman",
+  "DIYARBAKIR" = "Diyarbakır",
+  "ELAZIG" = "Elazığ",
+  "GAZIANTEP" = "Gaziantep",
+  "HATAY" = "Hatay",
+  "KAHRAMANMARAS" = "K.Maraş",
+  "KILIS" = "Kilis",
+  "MALATYA" = "Malatya",
+  "OSMANIYE" = "Osmaniye",
+  "SANLIURFA" = "Ş.Urfa"
+)
+
+THEME <- list(
+  burgundy = "#8B1E1E",
+  burgundy_dark = "#4B000F",
+  charcoal = "#252525",
+  beige = "#F6F1EA",
+  sand = "#D8B36A",
+  orange = "#D95F0E",
+  blue = "#1A5276",
+  green = "#27AE60",
+  gray = "#6F6860"
+)
+
+theme_set(
+  theme_minimal(base_size = 13) +
+    theme(
+      plot.title = element_text(face = "bold", colour = THEME$charcoal),
+      plot.subtitle = element_text(colour = THEME$gray),
+      plot.caption = element_text(colour = THEME$gray, size = 9),
+      panel.grid.minor = element_blank(),
+      legend.position = "bottom"
+    )
+)
 ```
 
-## 2.2 General Information About Data
+```{r page-style}
+#| echo: false
+#| eval: !expr knitr::is_html_output()
 
-The dataset covers the 11 provinces directly affected by the 
-February 6, 2023 earthquakes: Kahramanmaraş, Hatay, Adıyaman, 
-Malatya, Gaziantep, Şanlıurfa, Diyarbakır, Kilis, Osmaniye, 
-Adana, and Elazığ.
+htmltools::HTML('
+<style>
+.hero-cover {
+  background: linear-gradient(135deg, #252525 0%, #4b000f 55%, #8b1e1e 100%);
+  color: #fff;
+  border-radius: 18px;
+  padding: 42px 42px 34px 42px;
+  margin: 16px 0 34px 0;
+  box-shadow: 0 12px 34px rgba(50, 30, 25, 0.18);
+  position: relative;
+  overflow: hidden;
+}
+.hero-cover::after {
+  content: "";
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  right: -120px;
+  top: -120px;
+  background: radial-gradient(circle, rgba(216,179,106,0.28), rgba(216,179,106,0));
+}
+.hero-kicker {
+  font-size: 0.88rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #f1d8c8;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.hero-title {
+  font-size: clamp(2.1rem, 5vw, 4rem);
+  line-height: 1.05;
+  font-weight: 850;
+  max-width: 950px;
+  margin-bottom: 14px;
+  letter-spacing: -0.04em;
+}
+.hero-subtitle {
+  max-width: 880px;
+  font-size: 1.12rem;
+  line-height: 1.6;
+  color: #fff7ef;
+  margin-bottom: 28px;
+}
+.hero-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+.hero-tag {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  color: #fff;
+}
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 14px;
+  max-width: 920px;
+}
+.metric-card {
+  background: rgba(255,255,255,0.95);
+  color: #252525;
+  border-radius: 14px;
+  padding: 16px 18px;
+  border-left: 5px solid #d8b36a;
+}
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 850;
+  color: #8b1e1e;
+  line-height: 1;
+}
+.metric-label {
+  font-size: 0.88rem;
+  color: #5b5550;
+  margin-top: 7px;
+}
+@media (max-width: 760px) {
+  .hero-cover { padding: 28px 24px; }
+  .metric-grid { grid-template-columns: 1fr; }
+}
+</style>
+')
+```
 
-Each observation corresponds to one province and includes the 
-following variables:
+```{r load-data}
+#| code-fold: true
 
-| Variable | Description | Type |
-|---|---|---|
-| `province` | Province name | Character |
-| `population_22` | Population before earthquake (2022) | Numeric |
-| `population_23` | Population after earthquake (2023) | Numeric |
-| `growth_rate` | Annual population growth rate (‰) | Numeric |
-| `pop_change` | Population change (persons) | Numeric |
-
-
-## 2.3 Reason of Choice
-
-This dataset  is publicly available, regularly updated, and directly published 
-by TurkStat, ensuring reliability. Also, the 2022 and 2023 
-editions capture the population status immediately before and 
-after the earthquakes, making it ideal for measuring the 
-demographic impact. Additionally, the provincial level of granularity 
-is well-suited for comparative analysis across the affected region.
-
-The February 6 earthquakes represent a critical turning point 
-in Turkey's demographic landscape. Studying their impact on 
-population movement contributes to our understanding of how 
-large-scale disasters reshape human geography.
-
-## 2.4 Preprocessing
-
-The raw data was downloaded from TurkStat in Excel format. 
-The following preprocessing steps were applied:
-
-1. **Column selection:** Only the province name, population and annual growth rate columns were retained.
-2. **Province filtering:** The dataset was filtered to include 
-   only the 11 earthquake-affected provinces.
-3. **Type conversion:** Population figures contained spaces as 
-   thousand separators and were converted to numeric format.
-4. **Derived variable:** A population change variable (`pop_change`) 
-   was computed as the difference between 2023 and 2022 populations.
-```{r}
-#| message: false
-#| warning: false
-#| label: data-preprocessing
-
-library(readxl)
-library(tidyverse)
-
-earthquake_provinces <- c("Kahramanmaraş", "Hatay", "Adıyaman",
-                          "Malatya", "Gaziantep", "Şanlıurfa",
-                          "Diyarbakır", "Kilis", "Osmaniye",
-                          "Adana", "Elazığ")
-
-df_raw <- read_excel("adnks_il.xls", skip = 2)
-
-df <- df_raw |>
-  rename(
-    province      = 1,
-    population_22 = 2,
-    population_23 = 3,
-    growth_rate   = 10
-  ) |>
-  select(province, population_22, population_23, growth_rate) |>
-  filter(province %in% earthquake_provinces) |>
+pop <- read_excel(file.path(PROJE, "tr_nufus.xlsx")) |>
+  rename(year = 1, province_raw = 2, total = 3, male = 4, female = 5) |>
   mutate(
-    population_22 = as.numeric(gsub(" ", "", population_22)),
-    population_23 = as.numeric(gsub(" ", "", population_23)),
-    growth_rate   = as.numeric(growth_rate),
-    pop_change    = population_23 - population_22
+    year = as.integer(year),
+    total = num_clean(total),
+    male = num_clean(male),
+    female = num_clean(female),
+    province = normalize_city(province_raw),
+    label = PROVINCE_LABELS[province]
+  ) |>
+  filter(province %in% EQ_KEYS) |>
+  arrange(province, year) |>
+  group_by(province) |>
+  mutate(
+    pop_change = total - lag(total),
+    pop_change_pct = pop_change / lag(total) * 100,
+    sex_ratio = male / female * 100
+  ) |>
+  ungroup()
+
+damage <- read_excel(file.path(PROJE, "deprem_hasar_tablosu.xlsx")) |>
+  clean_names() |>
+  rename(
+    province_raw = il,
+    heavy = toplam_agir_yikik_konut_sayisi,
+    medium = orta_hasarli_konut_sayisi,
+    light = az_hasarli_konut_sayisi
+  ) |>
+  filter(!is.na(province_raw), province_raw != "Bölge Toplam") |>
+  mutate(
+    province = normalize_city(province_raw),
+    heavy = num_clean(heavy),
+    medium = num_clean(medium),
+    light = num_clean(light),
+    total_damage = heavy + medium + light
+  ) |>
+  filter(province %in% EQ_KEYS) |>
+  left_join(
+    pop |> filter(year == 2022) |> select(province, pop_2022 = total),
+    by = "province"
+  ) |>
+  mutate(
+    heavy_per_1000 = heavy / pop_2022 * 1000,
+    medium_per_1000 = medium / pop_2022 * 1000,
+    light_per_1000 = light / pop_2022 * 1000,
+    total_damage_per_1000 = total_damage / pop_2022 * 1000,
+    label = PROVINCE_LABELS[province]
   )
 
-save(df, file = "deprem_goc.RData")
-```
-```{r}
-#| label: data-overview
-#| tbl-cap: "Population change in earthquake-affected provinces (2022–2023)"
+flows_2023 <- read_excel(
+  file.path(PROJE, "deprem_2023_goc_akislari_duzenlenmis.xlsx"),
+  sheet = "Flow_2023_All"
+) |>
+  clean_names() |>
+  transmute(
+    from = normalize_city(origin_province),
+    to = normalize_city(destination_province),
+    value = num_clean(migration_count)
+  ) |>
+  filter(from %in% EQ_KEYS, value > 0)
 
-df |>
-  arrange(growth_rate) |>
-  knitr::kable(
-    col.names = c("Province", "Population 2022", "Population 2023",
-                  "Growth Rate (‰)", "Change (persons)"),
-    format.args = list(big.mark = ",")
+mig_raw <- read_excel(file.path(PROJE, "deprem_goc_ham_filtreli.xlsx"), skip = 2) |>
+  clean_names() |>
+  filter(!is.na(yil)) |>
+  transmute(
+    year = as.integer(yil),
+    dest = normalize_city(goc_alan_il_adi),
+    origin = normalize_city(goc_veren_il_adi),
+    flow = num_clean(aldigi_goc)
   )
-df <- read_excel("tr_nufus.xlsx")
 
-save(df, file = "deprem_goc.RData")
+net_migration <- bind_rows(
+  mig_raw |> transmute(year, province = dest, inflow = flow, outflow = 0),
+  mig_raw |> transmute(year, province = origin, inflow = 0, outflow = flow)
+) |>
+  filter(province %in% EQ_KEYS) |>
+  group_by(year, province) |>
+  summarise(
+    inflow = sum(inflow, na.rm = TRUE),
+    outflow = sum(outflow, na.rm = TRUE),
+    net_migration = inflow - outflow,
+    .groups = "drop"
+  ) |>
+  left_join(pop |> select(year, province, total), by = c("year", "province")) |>
+  mutate(
+    net_migration_rate = net_migration / total * 1000,
+    label = PROVINCE_LABELS[province]
+  )
 
-glimpse(df)
+analysis_data <- pop |>
+  filter(year %in% c(2022, 2023)) |>
+  select(province, label, year, total) |>
+  pivot_wider(names_from = year, values_from = total, names_prefix = "pop_") |>
+  mutate(
+    pop_change = pop_2023 - pop_2022,
+    pop_change_pct = pop_change / pop_2022 * 100
+  ) |>
+  left_join(
+    damage |> select(province, heavy_per_1000, total_damage_per_1000),
+    by = "province"
+  )
+
+cover_stats <- tibble(
+  net_loss_2023 = net_migration |>
+    filter(year == 2023) |>
+    summarise(x = sum(net_migration, na.rm = TRUE)) |>
+    pull(x),
+  affected_provinces = length(EQ_KEYS),
+  period_years = max(pop$year, na.rm = TRUE) - min(pop$year, na.rm = TRUE) + 1
+)
+
+save(
+  pop, damage, flows_2023, net_migration, analysis_data,
+  file = file.path(PROJE, "final_earthquake_migration_project.RData")
+)
 ```
+
+```{r cover-page}
+#| echo: false
+#| eval: !expr knitr::is_html_output()
+
+year_period_text <- paste0(min(pop$year), "–", max(pop$year))
+
+htmltools::HTML(glue::glue('
+<div class="hero-cover">
+  <div class="hero-kicker">Population & Migration Research · Turkey {year_period_text}</div>
+  <div class="hero-title">The February 6 Earthquake and Migration Dynamics</div>
+  <div class="hero-subtitle">
+    A data-driven analysis of damage exposure, internal migration flows,
+    population loss, and demographic recovery across 11 affected provinces.
+  </div>
+  <div class="hero-tags">
+    <span class="hero-tag">Damage Intensity</span>
+    <span class="hero-tag">Internal Migration</span>
+    <span class="hero-tag">Population Recovery</span>
+    <span class="hero-tag">TÜİK & AFAD Data</span>
+  </div>
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-value">{format(abs(cover_stats$net_loss_2023), big.mark = ",")}</div>
+      <div class="metric-label">Net migration loss in earthquake provinces, 2023</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{cover_stats$affected_provinces}</div>
+      <div class="metric-label">Earthquake-affected provinces analyzed</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{cover_stats$period_years}</div>
+      <div class="metric-label">Years of demographic data, {year_period_text}</div>
+    </div>
+  </div>
+</div>
+'))
+```
+
+# Abstract {.unnumbered}
+
+<!-- Write your abstract here in your own words. Mention the topic, data sources, method, and main result in one short paragraph. -->
+
+# Introduction
+
+<!-- Write the problem context and research questions here in your own words. -->
+
+# Data and Preprocessing
+
+<!-- Explain the nature of each dataset, why it was selected, and how the data was imported and cleaned. -->
+
+The final processed dataset is available here:  
+[Download final RData file](final_earthquake_migration_project.RData)
+
+```{r data-summary-table}
+#| tbl-cap: "Summary of datasets used in the project."
+
+tibble(
+  Dataset = c(
+    "tr_nufus.xlsx",
+    "deprem_hasar_tablosu.xlsx",
+    "deprem_2023_goc_akislari_duzenlenmis.xlsx",
+    "deprem_goc_ham_filtreli.xlsx",
+    "I_ller_Arası_Go_c_.xlsx"
+  ),
+  Content = c(
+    "Annual province-level population by sex",
+    "Housing damage by province and damage severity",
+    "Cleaned 2023 migration flows from earthquake provinces",
+    "Annual inter-provincial migration data",
+    "Full 81x81 inter-provincial migration table"
+  ),
+  Period = c("2018–2025", "2023", "2023", "2018–2025", "2008–2025"),
+  Main_Use = c(
+    "Population trend and recovery analysis",
+    "Damage intensity calculation",
+    "Migration flow visualization",
+    "Net migration rate analysis",
+    "Supplementary Ankara analysis"
+  )
+) |>
+  knitr::kable()
+```
+
+# Exploratory Data Analysis
+
+<!-- Introduce the EDA section in your own words. -->
+
+## Damage Intensity
+
+<!-- Explain what this map shows and why damage per 1,000 residents is used. -->
+
+```{r damage-map}
+#| code-fold: true
+#| eval: !expr knitr::is_html_output()
+
+geo_url <- "https://raw.githubusercontent.com/alpers/Turkey-Maps-GeoJSON/master/tr-cities.json"
+
+tr_map <- sf::st_read(geo_url, quiet = TRUE) |>
+  mutate(province = normalize_city(name))
+
+damage_map <- tr_map |>
+  left_join(damage, by = "province")
+
+pal <- leaflet::colorBin(
+  palette = c("#ffffcc", "#fed976", "#fd8d3c", "#e31a1c", "#5c0011"),
+  domain = damage_map$heavy_per_1000,
+  bins = c(0, 10, 30, 60, 90, 130),
+  na.color = "#eeeeee",
+  right = FALSE
+)
+
+city_centers <- sf::st_centroid(tr_map) |>
+  filter(province %in% EQ_KEYS)
+
+earthquake_centers <- tibble::tribble(
+  ~event, ~location, ~lat, ~lng, ~depth_km, ~magnitude,
+  "1st earthquake", "Pazarcık, Kahramanmaraş", 37.236, 37.057, 8.6, 7.7,
+  "2nd earthquake", "Elbistan, Kahramanmaraş", 38.089, 37.239, 7.0, 7.6
+)
+
+quake_icon <- leaflet::awesomeIcons(
+  icon = "star",
+  iconColor = "white",
+  markerColor = "red",
+  library = "fa"
+)
+
+leaflet::leaflet(damage_map) |>
+  leaflet::addProviderTiles("CartoDB.Positron") |>
+  leaflet::addPolygons(
+    fillColor = ~pal(heavy_per_1000),
+    fillOpacity = ~ifelse(is.na(heavy_per_1000), 0.12, 0.78),
+    color = "white",
+    weight = 1,
+    popup = ~ifelse(
+      is.na(heavy_per_1000),
+      paste0("<b>", name, "</b><br>Not included in earthquake damage data."),
+      paste0(
+        "<b>", label, "</b><br>",
+        "Heavy/collapsed housing: ", format(heavy, big.mark = ","), "<br>",
+        "Medium damaged housing: ", format(medium, big.mark = ","), "<br>",
+        "Light damaged housing: ", format(light, big.mark = ","), "<br>",
+        "Heavy damage per 1,000 residents: ", round(heavy_per_1000, 1), "<br>",
+        "Total damage per 1,000 residents: ", round(total_damage_per_1000, 1)
+      )
+    )
+  ) |>
+  leaflet::addLabelOnlyMarkers(
+    data = city_centers,
+    label = ~PROVINCE_LABELS[province],
+    labelOptions = leaflet::labelOptions(
+      noHide = TRUE,
+      direction = "center",
+      textOnly = TRUE,
+      style = list(
+        "font-size" = "12px",
+        "font-weight" = "bold",
+        "color" = "black",
+        "text-shadow" = "1px 1px 5px white, -1px -1px 5px white"
+      )
+    )
+  ) |>
+  leaflet::addAwesomeMarkers(
+    data = earthquake_centers,
+    lng = ~lng,
+    lat = ~lat,
+    icon = quake_icon,
+    label = ~paste0(location, " | Mw ", magnitude),
+    popup = ~paste0(
+      "<b>", event, "</b><br>",
+      "Location: ", location, "<br>",
+      "Magnitude: Mw ", magnitude, "<br>",
+      "Focal depth: ", depth_km, " km"
+    )
+  ) |>
+  leaflet::addLegend(
+    pal = pal,
+    values = damage_map$heavy_per_1000,
+    title = htmltools::HTML(
+      "<div style='font-size:11px; line-height:1.15;'>
+      Heavy / collapsed<br>housing per 1,000 residents
+      </div>"
+    ),
+    position = "bottomright",
+    opacity = 0.85
+  )
+```
+
+```{r damage-composition}
+#| fig-cap: "Housing damage intensity by province, normalized by 2022 population."
+
+damage_long <- damage |>
+  select(label, light_per_1000, medium_per_1000, heavy_per_1000, total_damage_per_1000) |>
+  arrange(total_damage_per_1000) |>
+  mutate(label = factor(label, levels = label)) |>
+  pivot_longer(
+    c(light_per_1000, medium_per_1000, heavy_per_1000),
+    names_to = "type",
+    values_to = "value"
+  ) |>
+  mutate(
+    type = factor(
+      type,
+      levels = c("light_per_1000", "medium_per_1000", "heavy_per_1000"),
+      labels = c("Light", "Medium", "Heavy / Collapsed")
+    )
+  )
+
+ggplot(damage_long, aes(value, label, fill = type)) +
+  geom_col(width = 0.72) +
+  geom_text(
+    data = damage |> mutate(label = factor(label, levels = levels(damage_long$label))),
+    aes(total_damage_per_1000, label, label = round(total_damage_per_1000, 1)),
+    inherit.aes = FALSE,
+    hjust = -0.2,
+    size = 3.5,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(values = c(
+    "Light" = "#F7DC6F",
+    "Medium" = "#F39C12",
+    "Heavy / Collapsed" = "#C0392B"
+  )) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.16))) +
+  labs(
+    title = "Housing Damage per 1,000 Residents",
+    subtitle = "Damage severity normalized by 2022 provincial population",
+    x = "Damaged housing units per 1,000 residents",
+    y = NULL,
+    fill = "Damage level",
+    caption = "Values at the end of bars show total damage per 1,000 residents."
+  ) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
+```
+
+## Migration Overview
+
+<!-- Explain why net migration rate per 1,000 residents is more comparable than raw net migration. -->
+
+```{r net-migration-rate}
+#| fig-cap: "Net migration rate per 1,000 residents in 2022, 2023, and 2024."
+
+net_migration |>
+  filter(year %in% c(2022, 2023, 2024)) |>
+  mutate(label = fct_reorder(label, if_else(year == 2023, net_migration_rate, NA_real_), mean, na.rm = TRUE)) |>
+  ggplot(aes(label, net_migration_rate, fill = factor(year))) +
+  geom_col(position = position_dodge(0.75), width = 0.68) +
+  geom_hline(yintercept = 0, linewidth = 0.4) +
+  scale_fill_manual(values = c("2022" = "#c9b458", "2023" = "#c0392b", "2024" = "#27ae60")) +
+  scale_y_continuous(labels = label_number(suffix = "‰")) +
+  labs(
+    title = "Net Migration Shock in 2023",
+    x = NULL,
+    y = "Net migration rate per 1,000 residents",
+    fill = "Year"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 35, hjust = 1),
+    panel.grid.major.x = element_blank(),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
 ```
 
 
+## Population Trends
+
+<!-- Explain how the population data is used to observe the demographic break before and after 2023. -->
+
+```{r population-trend}
+#| fig-cap: "Population trend in 11 earthquake-affected provinces, 2018–2025."
+
+pop |>
+  ggplot(aes(year, total / 1e6, color = label, group = label)) +
+  geom_vline(xintercept = 2023, linetype = "dashed", color = "red", alpha = 0.55) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  annotate("text", x = 2023.1, y = 0.2, label = "2023 Earthquake", hjust = 0, color = "red", size = 3) +
+  scale_x_continuous(breaks = 2018:2025) +
+  scale_y_continuous(labels = label_number(suffix = "M")) +
+  labs(
+    title = "Population Trends in Earthquake-Affected Provinces",
+    x = NULL,
+    y = "Population",
+    color = NULL
+  ) +
+  theme(
+    legend.position = "right",
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold")
+  )
+```
 
 
+# Main Analysis
+
+<!-- Introduce the main analysis section in your own words. -->
+
+## Interactive Migration Flow Map
+
+<!-- Explain what the map shows. Mention that it is available in the HTML version. -->
+
+```{r migration-flow-map}
+#| echo: true
+#| warning: false
+#| message: false
+#| eval: !expr knitr::is_html_output()
+
+coords <- tribble(
+  ~province, ~lat, ~lon,
+  "ADANA",37.00,35.32, "ADIYAMAN",37.76,38.28,
+  "DIYARBAKIR",37.91,40.22, "ELAZIG",38.67,39.22,
+  "GAZIANTEP",37.07,37.38, "HATAY",36.20,36.16,
+  "KAHRAMANMARAS",37.58,36.92, "KILIS",36.72,37.12,
+  "MALATYA",38.35,38.31, "OSMANIYE",37.07,36.25,
+  "SANLIURFA",37.16,38.80, "ANKARA",39.93,32.86,
+  "ISTANBUL",41.02,28.97, "MERSIN",36.80,34.64,
+  "ANTALYA",36.90,30.70, "IZMIR",38.42,27.14,
+  "KONYA",37.87,32.48, "KAYSERI",38.72,35.49,
+  "MARDIN",37.31,40.74, "BURSA",40.18,29.06,
+  "KOCAELI",40.77,29.95, "MUGLA",37.21,28.36,
+  "AYDIN",37.85,27.84, "ESKISEHIR",39.77,30.52,
+  "SAMSUN",41.29,36.33, "SIVAS",39.75,37.02
+)
+
+labels <- tribble(
+  ~province, ~label,
+  "ADANA","Adana", "ADIYAMAN","Adıyaman",
+  "DIYARBAKIR","Diyarbakır", "ELAZIG","Elazığ",
+  "GAZIANTEP","Gaziantep", "HATAY","Hatay",
+  "KAHRAMANMARAS","K.Maraş", "KILIS","Kilis",
+  "MALATYA","Malatya", "OSMANIYE","Osmaniye",
+  "SANLIURFA","Ş.Urfa", "ANKARA","Ankara",
+  "ISTANBUL","İstanbul", "MERSIN","Mersin",
+  "ANTALYA","Antalya", "IZMIR","İzmir",
+  "KONYA","Konya", "KAYSERI","Kayseri",
+  "MARDIN","Mardin", "BURSA","Bursa",
+  "KOCAELI","Kocaeli", "MUGLA","Muğla",
+  "AYDIN","Aydın", "ESKISEHIR","Eskişehir",
+  "SAMSUN","Samsun", "SIVAS","Sivas"
+)
+
+flows_map <- flows_2023 |>
+  filter(value >= 500, to %in% coords$province) |>
+  group_by(from_key = from, to_key = to) |>
+  summarise(value = sum(value), .groups = "drop")
+
+tr_simple <- tr_map |>
+  st_transform(4326) |>
+  st_simplify(dTolerance = 0.03) |>
+  left_join(damage |> select(province, damage = heavy_per_1000), by = "province")
+
+map_geojson <- geojsonsf::sf_geojson(tr_simple)
+flow_json <- jsonlite::toJSON(flows_map, auto_unbox = TRUE)
+coord_json <- jsonlite::toJSON(coords, auto_unbox = TRUE)
+label_json <- jsonlite::toJSON(labels, auto_unbox = TRUE)
+
+button_list <- c("ALL", EQ_KEYS)
+button_labels <- c("All", labels$label[match(EQ_KEYS, labels$province)])
+
+buttons_html <- paste0(
+  paste0(
+    "<button class='prov-btn", ifelse(button_list == "ALL", " active", ""),
+    "' onclick=\"setFilter('", button_list, "', this)\">",
+    button_labels, "</button>"
+  ),
+  collapse = ""
+)
+
+HTML(glue::glue('
+<style>
+#controls {{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; font-size:13px; }}
+.prov-btn {{ font-size:11px; padding:4px 9px; border-radius:18px; cursor:pointer; border:1px solid #ccc; background:#f7f7f7; }}
+.prov-btn.active {{ border-color:#8b1e1e; background:#fdecea; color:#8b1e1e; font-weight:bold; }}
+#tooltip {{ position:fixed; background:white; border:1px solid #ccc; border-radius:8px; padding:8px 12px; font-size:12px; pointer-events:none; opacity:0; box-shadow:0 2px 8px rgba(0,0,0,.15); z-index:999; }}
+#legend {{ display:flex; gap:16px; font-size:12px; margin-top:8px; flex-wrap:wrap; }}
+.leg-item {{ display:flex; align-items:center; gap:5px; }}
+.leg-dot {{ width:11px; height:11px; border-radius:50%; }}
+</style>
+<div id="tooltip"></div>
+<div id="controls"><b>Filter by origin:</b>{buttons_html}</div>
+<svg id="mapsvg" width="100%" viewBox="0 0 680 420" style="display:block">
+  <g id="map-layer"></g><g id="flows-layer"></g><g id="dots-layer"></g><g id="labels-layer"></g>
+</svg>
+<div id="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#f0d27a"></div><span>Low damage</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#e17035"></div><span>Medium damage</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#4b000f"></div><span>High damage</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#1a5276"></div><span>Destination province</span></div>
+</div>
+<script>
+const TURKEY = {map_geojson};
+const FLOWS = {flow_json};
+const COORDS_RAW = {coord_json};
+const LABELS_RAW = {label_json};
+const COORDS = Object.fromEntries(COORDS_RAW.map(d => [d.province, [d.lat, d.lon]]));
+const LABELS = Object.fromEntries(LABELS_RAW.map(d => [d.province, d.label]));
+const LON_MIN=25.5, LON_MAX=45.2, LAT_MIN=35.4, LAT_MAX=42.6;
+const SVG_X_MIN=35, SVG_X_MAX=610, SVG_Y_MIN=38, SVG_Y_MAX=315;
+
+function toSVG(lat, lon) {{
+  const x = SVG_X_MIN + (lon - LON_MIN) / (LON_MAX - LON_MIN) * (SVG_X_MAX - SVG_X_MIN);
+  const y = SVG_Y_MAX - (lat - LAT_MIN) / (LAT_MAX - LAT_MIN) * (SVG_Y_MAX - SVG_Y_MIN);
+  return [x, y];
+}}
+
+function damageColor(v) {{
+  if (v == null || isNaN(v)) return "#d6d6d6";
+  if (v < 10) return "#f0d27a";
+  if (v < 30) return "#e69f45";
+  if (v < 60) return "#d95f0e";
+  if (v < 90) return "#b30000";
+  return "#4b000f";
+}}
+
+function drawMap() {{
+  const ml = document.getElementById("map-layer");
+  TURKEY.features.forEach(f => {{
+    const damage = f.properties.damage;
+    const coords = f.geometry.coordinates;
+    const polys = f.geometry.type === "MultiPolygon" ? coords : [coords];
+    polys.forEach(poly => {{ poly.forEach(ring => {{
+      let d = "";
+      ring.forEach((pt, i) => {{
+        const [x, y] = toSVG(pt[1], pt[0]);
+        d += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      }});
+      d += "Z";
+      const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", damageColor(damage));
+      path.setAttribute("fill-opacity", damage == null ? "0.48" : "0.88");
+      path.setAttribute("stroke", "#ffffff");
+      path.setAttribute("stroke-width", "0.7");
+      ml.appendChild(path);
+    }}); }});
+  }});
+}}
+
+function dotR(v, maxDest) {{ return 5 + (v / maxDest) * 13; }}
+
+function curvePath(x1, y1, x2, y2) {{
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
+  const bulge=Math.min(len*0.22,45);
+  const cx=mx + (-dy/len)*bulge;
+  const cy=my + ( dx/len)*bulge;
+  return `M ${{x1.toFixed(1)}} ${{y1.toFixed(1)}} Q ${{cx.toFixed(1)}} ${{cy.toFixed(1)}} ${{x2.toFixed(1)}} ${{y2.toFixed(1)}}`;
+}}
+
+let activeFilter = "ALL";
+
+function setFilter(p, btn) {{
+  activeFilter = p;
+  document.querySelectorAll(".prov-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  render();
+}}
+
+const tooltip = document.getElementById("tooltip");
+
+function showTip(e, html) {{ tooltip.innerHTML = html; tooltip.style.opacity = 1; moveTip(e); }}
+function moveTip(e) {{ tooltip.style.left = (e.clientX + 14) + "px"; tooltip.style.top = (e.clientY - 28) + "px"; }}
+function hideTip() {{ tooltip.style.opacity = 0; }}
+
+function render() {{
+  const fl = document.getElementById("flows-layer");
+  const dl = document.getElementById("dots-layer");
+  const ll = document.getElementById("labels-layer");
+  fl.innerHTML = ""; dl.innerHTML = ""; ll.innerHTML = "";
+
+  const visible = activeFilter === "ALL" ? FLOWS : FLOWS.filter(f => f.from_key === activeFilter);
+  const destTotals = {{}};
+
+  visible.forEach(f => destTotals[f.to_key] = (destTotals[f.to_key] || 0) + f.value);
+  const maxDest = Math.max(...Object.values(destTotals), 1);
+
+  visible.forEach(f => {{
+    if (!COORDS[f.from_key] || !COORDS[f.to_key]) return;
+    const [lat1, lon1] = COORDS[f.from_key];
+    const [lat2, lon2] = COORDS[f.to_key];
+    const [x1, y1] = toSVG(lat1, lon1);
+    const [x2, y2] = toSVG(lat2, lon2);
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", curvePath(x1,y1,x2,y2));
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", "#8b1e1e");
+    path.setAttribute("stroke-width", "1.8");
+    path.setAttribute("stroke-opacity", "0.52");
+    path.setAttribute("stroke-linecap", "round");
+    path.addEventListener("mouseenter", e => showTip(e, `<b>${{LABELS[f.from_key]}} → ${{LABELS[f.to_key]}}</b><br>${{Number(f.value).toLocaleString("tr-TR")}} people`));
+    path.addEventListener("mousemove", moveTip);
+    path.addEventListener("mouseleave", hideTip);
+    fl.appendChild(path);
+  }});
+
+  const allProvs = new Set();
+  visible.forEach(f => {{ allProvs.add(f.from_key); allProvs.add(f.to_key); }});
+
+  allProvs.forEach(p => {{
+    if (!COORDS[p]) return;
+    const [lat, lon] = COORDS[p];
+    const [x, y] = toSVG(lat, lon);
+    const isDest = destTotals[p] > 0;
+
+    if (isDest) {{
+      const dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      dot.setAttribute("cx", x); dot.setAttribute("cy", y);
+      dot.setAttribute("r", dotR(destTotals[p], maxDest));
+      dot.setAttribute("fill", "#1a5276");
+      dot.setAttribute("opacity", "0.80");
+      dot.setAttribute("stroke", "white");
+      dot.setAttribute("stroke-width", "1.5");
+      dot.addEventListener("mouseenter", e => showTip(e, `<b>${{LABELS[p]}}</b><br>${{Number(destTotals[p]).toLocaleString("tr-TR")}} people`));
+      dot.addEventListener("mousemove", moveTip);
+      dot.addEventListener("mouseleave", hideTip);
+      dl.appendChild(dot);
+    }}
+
+    const text = document.createElementNS("http://www.w3.org/2000/svg","text");
+    text.setAttribute("x", x + 7);
+    text.setAttribute("y", y - 7);
+    text.setAttribute("font-size", "10");
+    text.setAttribute("font-weight", "700");
+    text.setAttribute("fill", "#111");
+    text.setAttribute("stroke", "white");
+    text.setAttribute("stroke-width", "2.8");
+    text.setAttribute("paint-order", "stroke");
+    text.textContent = LABELS[p] || p;
+    ll.appendChild(text);
+  }});
+}}
+
+drawMap();
+render();
+</script>
+'))
+```
+
+```{r migration-flow-static-pdf}
+#| eval: !expr knitr::is_latex_output()
+#| fig-cap: "Top destination provinces receiving migrants from earthquake provinces in 2023."
+
+flows_2023 |>
+  group_by(to) |>
+  summarise(total_inflow = sum(value), .groups = "drop") |>
+  slice_max(total_inflow, n = 15) |>
+  mutate(
+    label = if_else(to %in% names(PROVINCE_LABELS), PROVINCE_LABELS[to], str_to_title(to)),
+    label = fct_reorder(label, total_inflow)
+  ) |>
+  ggplot(aes(total_inflow, label)) +
+  geom_col(fill = "#1a5276", width = 0.7) +
+  scale_x_continuous(labels = label_number(suffix = "K", scale = 1 / 1000)) +
+  labs(
+    title = "Top Destination Provinces in 2023",
+    x = "Incoming migration from earthquake provinces",
+    y = NULL
+  ) +
+  theme(panel.grid.major.y = element_blank())
+```
+
+## Top Receiving Provinces
+
+<!-- Explain the ranking of top destination provinces. -->
+
+```{r top-destinations}
+#| fig-cap: "Top destination provinces receiving migrants from earthquake provinces in 2023."
+
+flows_2023 |>
+  group_by(to) |>
+  summarise(total_inflow = sum(value), .groups = "drop") |>
+  slice_max(total_inflow, n = 15) |>
+  mutate(
+    label = if_else(to %in% names(PROVINCE_LABELS), PROVINCE_LABELS[to], str_to_title(to)),
+    is_eq = to %in% EQ_KEYS,
+    label = fct_reorder(label, total_inflow)
+  ) |>
+  ggplot(aes(total_inflow, label, fill = is_eq)) +
+  geom_col(width = 0.72) +
+  scale_fill_manual(
+    values = c("TRUE" = "#c0392b", "FALSE" = "#1a5276"),
+    labels = c("Other province", "Earthquake province")
+  ) +
+  scale_x_continuous(labels = label_number(suffix = "K", scale = 1 / 1000)) +
+  labs(
+    title = "Top Destination Provinces in 2023",
+    subtitle = "Total in-migration from the 11 earthquake-affected provinces",
+    x = "Incoming migration from earthquake provinces",
+    y = NULL,
+    fill = NULL
+  ) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
+```
+
+## Migration Routes from the Three Hardest-Hit Provinces
+
+Hatay, Malatya, and Kahramanmaraş are among the provinces hardest hit by the earthquake in terms of both the intensity of severe damage and absolute population loss. Since these three provinces constitute a large part of the recorded migration flows in 2023, they were selected as focal points in determining the target provinces and comparing migration routes.
+
+```{r top-routes-hardest-hit}
+#| fig-cap: "Top destination provinces for out-migrants from Hatay, Malatya and Kahramanmaraş in 2023."
+
+hardest_hit <- c("HATAY", "MALATYA", "KAHRAMANMARAS")
+
+flows_2023 |>
+  filter(from %in% hardest_hit) |>
+  group_by(from, to) |>
+  summarise(outflow = sum(value, na.rm = TRUE), .groups = "drop") |>
+  group_by(from) |>
+  slice_max(outflow, n = 8, with_ties = FALSE) |>
+  ungroup() |>
+  mutate(
+    origin_label = PROVINCE_LABELS[from],
+    dest_label = if_else(to %in% names(PROVINCE_LABELS), PROVINCE_LABELS[to], str_to_title(to)),
+    dest_label = fct_reorder(dest_label, outflow)
+  ) |>
+  ggplot(aes(outflow, dest_label, fill = origin_label)) +
+  geom_col(show.legend = FALSE, width = 0.72) +
+  facet_wrap(~origin_label, scales = "free_y", ncol = 3) +
+  scale_fill_manual(values = c("Hatay" = "#264653", "Malatya" = "#8338ec", "K.Maraş" = "#e63946")) +
+  scale_x_continuous(labels = label_number(suffix = "K", scale = 1 / 1000)) +
+  labs(
+    title = "Main Destination Routes from the Hardest-Hit Provinces",
+    x = "Out-migration in 2023",
+    y = NULL,
+    caption = "Only flows from the selected origin province are included."
+  ) +
+  theme(
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major.y = element_blank()
+  )
+```
+
+## Damage Intensity and Population Loss
+
+This graph addresses the question of whether there is a measurable relationship between physical destruction and demographic loss. This scatter plot, where each point shows the number of severely damaged/collapsed houses per 1,000 people on the horizontal axis and the percentage change in population between 2022 and 2023 on the vertical axis, indicates that as the intensity of severe damage increases, population losses also deepen.
+
+```{r damage-vs-pop-loss}
+#| fig-cap: "Relationship between heavy damage intensity and population change from 2022 to 2023."
+
+ggplot(analysis_data, aes(x = heavy_per_1000, y = pop_change_pct, label = label)) +
+  geom_hline(yintercept = 0, color = "gray40", linewidth = 0.4) +
+  geom_smooth(method = "lm", se = FALSE, linetype = "dashed", color = "black") +
+  geom_point(aes(size = abs(pop_change)), color = "#c0392b", alpha = 0.78) +
+  ggrepel::geom_text_repel(size = 3.4, max.overlaps = 20) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(
+    title = "Damage Intensity and Population Loss",
+    subtitle = "Heavy damage intensity compared with 2022–2023 population change",
+    x = "Heavy / collapsed housing per 1,000 residents",
+    y = "Population change, 2022–2023",
+    size = "Absolute population change"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+# Recovery Status by 2025
+
+The recovery gap shows the extent to which the actual 2025 population of each province deviates from the expected population based on the pre-earthquake (2018–2022) trend. Positive values ​​indicate that the expected trend has been exceeded, while negative values ​​indicate that a persistent demographic gap continues.
+
+```{r recovery-gap}
+#| fig-cap: "Recovery gap in 2025 relative to expected population based on 2018–2022 trend."
+
+recovery <- pop |>
+  group_by(province, label) |>
+  group_modify(~{
+    fit <- lm(total ~ year, data = .x |> filter(year <= 2022))
+    tibble(
+      expected_2025 = as.numeric(predict(fit, newdata = tibble(year = 2025))),
+      actual_2025 = .x$total[.x$year == 2025]
+    )
+  }) |>
+  ungroup() |>
+  mutate(
+    recovery_gap_pct = (actual_2025 - expected_2025) / expected_2025 * 100,
+    status = case_when(
+      recovery_gap_pct >= 0 ~ "Above expected trend",
+      recovery_gap_pct >= -5 ~ "Near recovery",
+      TRUE ~ "Still below trend"
+    )
+  )
+
+ggplot(recovery, aes(recovery_gap_pct, reorder(label, recovery_gap_pct), fill = status)) +
+  geom_col(width = 0.65) +
+  geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.8) +
+  geom_text(
+    aes(label = paste0(round(recovery_gap_pct, 1), "%")),
+    hjust = ifelse(recovery$recovery_gap_pct >= 0, -0.2, 1.15),
+    size = 3.6,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(values = c(
+    "Still below trend" = "#c0392b",
+    "Near recovery" = "#f39c12",
+    "Above expected trend" = "#27ae60"
+  )) +
+  scale_x_continuous(
+    labels = function(x) paste0(x, "%"),
+    expand = expansion(mult = c(0.15, 0.15))
+  ) +
+  labs(
+    title = "Recovery Gap of Earthquake-Affected Provinces in 2025",
+    subtitle = "Actual 2025 population compared with expected trend based on 2018–2022",
+    x = "Gap from expected 2025 population",
+    y = NULL,
+    fill = "Recovery status",
+    caption = "0% = expected trend level. Negative values indicate remaining demographic deficit."
+  ) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
+```
+
+# Supplementary Analysis
+
+## Ankara Migration Question
+
+Ankara is examined in a separate section as it is one of the major cities to which migration from earthquake zones is most directed.
+Since looking only at net migration figures can be misleading, in this analysis, incoming and outgoing flows are evaluated together;
+the component from earthquake provinces and the component from other provinces are separated, and the structural change in Ankara's migration dynamics is revealed more clearly.
+
+```{r ankara-prep}
+#| include: false
+
+full_mig <- read_excel(file.path(PROJE, "I_ller_Arası_Go_c_.xlsx"), skip = 1) |>
+  set_names(c("year", "dest", "origin", "dest_pop", "origin_pop", "in_f", "out_f", "net_f")) |>
+  filter(!is.na(year)) |>
+  mutate(
+    year = as.integer(year),
+    dest = normalize_city(dest),
+    origin = normalize_city(origin),
+    in_f = num_clean(in_f),
+    out_f = num_clean(out_f),
+    net_f = num_clean(net_f)
+  )
+
+ankara_total <- full_mig |>
+  filter(dest == "ANKARA", year >= 2018) |>
+  group_by(year) |>
+  summarise(
+    total_in = sum(in_f, na.rm = TRUE),
+    total_out = sum(out_f, na.rm = TRUE),
+    net_total = sum(net_f, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ankara_eq <- full_mig |>
+  filter(dest == "ANKARA", origin %in% EQ_KEYS, year >= 2018) |>
+  group_by(year) |>
+  summarise(
+    eq_in = sum(in_f, na.rm = TRUE),
+    eq_out = sum(out_f, na.rm = TRUE),
+    net_eq = sum(net_f, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ankara <- ankara_total |>
+  left_join(ankara_eq, by = "year") |>
+  mutate(
+    across(c(eq_in, eq_out, net_eq), ~replace_na(.x, 0)),
+    net_non_eq = net_total - net_eq
+  )
+
+baseline_total <- ankara |>
+  filter(year <= 2022) |>
+  summarise(value = mean(net_total, na.rm = TRUE)) |>
+  pull(value)
+```
+
+The chart below breaks Ankara's net migration into two components to isolate how much of the 2023 surge came specifically from earthquake-affected provinces, as opposed to broader population movements already underway.
+```{r ankara-net-migration}
+#| fig-cap: "Ankara's net migration from earthquake provinces and other provinces, 2018–2025."
+
+ankara |>
+  select(year, `From earthquake provinces` = net_eq, `From other provinces` = net_non_eq) |>
+  pivot_longer(-year, names_to = "component", values_to = "value") |>
+  ggplot(aes(factor(year), value, fill = component)) +
+  geom_col(width = 0.7, alpha = 0.85) +
+  geom_line(
+    data = ankara,
+    aes(x = factor(year), y = net_total, group = 1),
+    inherit.aes = FALSE,
+    color = "black",
+    linewidth = 1.1
+  ) +
+  geom_point(
+    data = ankara,
+    aes(x = factor(year), y = net_total),
+    inherit.aes = FALSE,
+    color = "black",
+    size = 2.6
+  ) +
+  geom_hline(yintercept = baseline_total, linetype = "dashed", color = "#264653") +
+  geom_hline(yintercept = 0, linewidth = 0.4) +
+  scale_fill_manual(values = c(
+    "From earthquake provinces" = "#c0392b",
+    "From other provinces" = "#457b9d"
+  )) +
+  scale_y_continuous(labels = label_comma()) +
+  labs(
+    title = "Ankara Net Migration Decomposition",
+    subtitle = "Earthquake-province component compared with all other provincial flows",
+    x = NULL,
+    y = "Net migration",
+    fill = NULL,
+    caption = "Bars show components. Black line shows total net migration. Dashed line shows 2018–2022 average total net migration."
+  ) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
+```
+
+The chart below shows gross in- and out-migration separately, as net figures alone do not distinguish between more arrivals and fewer departures.
+```{r ankara-gross-flows}
+#| fig-cap: "Gross in-migration and out-migration into/from Ankara, 2018–2025."
+
+ankara |>
+  select(year, `In-migration` = total_in, `Out-migration` = total_out) |>
+  pivot_longer(-year, names_to = "flow_type", values_to = "people") |>
+  ggplot(aes(factor(year), people, fill = flow_type)) +
+  geom_col(position = position_dodge(0.75), width = 0.65) +
+  scale_fill_manual(values = c("In-migration" = "#c0392b", "Out-migration" = "#457b9d")) +
+  scale_y_continuous(labels = label_comma()) +
+  labs(
+    title = "Gross Migration Into and Out of Ankara",
+    subtitle = "In-migration and out-migration are shown together to avoid one-sided interpretation",
+    x = NULL,
+    y = "Number of people",
+    fill = NULL
+  ) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold")
+  )
+```
+
+The table below shows how in-migration to Ankara in 2023 was distributed across the eleven earthquake-affected provinces.
+```{r ankara-origin-table}
+#| tbl-cap: "Migration from each earthquake province into Ankara in 2023."
+
+full_mig |>
+  filter(year == 2023, dest == "ANKARA", origin %in% EQ_KEYS) |>
+  mutate(
+    province_label = PROVINCE_LABELS[origin],
+    share = in_f / sum(in_f, na.rm = TRUE) * 100
+  ) |>
+  arrange(desc(net_f)) |>
+  transmute(
+    Province = province_label,
+    `In-Migration` = round(in_f, 0),
+    `Out-Migration` = round(out_f, 0),
+    `Net Migration` = round(net_f, 0),
+    `Share of EQ inflow (%)` = round(share, 1)
+  ) |>
+  knitr::kable()
+```
+
+# Key Takeaways
+
+1. Damage intensity was not evenly distributed across the earthquake region; Hatay, Malatya, Adıyaman, and Kahramanmaraş stood out with the highest heavy-damage burden per 1,000 residents.
+
+2. The strongest population losses in 2023 were observed in provinces with higher heavy-damage intensity, suggesting a visible relationship between physical destruction and demographic decline.
+
+3. Migration flows from earthquake-affected provinces were directed not only toward major metropolitan areas such as Istanbul, Ankara, and Antalya, but also toward nearby regional destinations.
+
+4. Recovery by 2025 remained uneven; some provinces approached or exceeded their expected population trend, while the hardest-hit provinces still showed a demographic gap.
+
+5. The Ankara-specific analysis shows that earthquake-origin inflows increased in 2023, but total net migration should be interpreted together with outflows and other provincial movements.
+
+# Conclusion
+
+The February 2023 earthquakes left both immediate and lasting demographic traces in the affected provinces. Findings show that the intensity of severe damage is significantly related to population loss; the provinces that experienced the highest destruction also faced the sharpest waves of migration. These migrations in 2023 were directed primarily to large cities, including Istanbul, Ankara, and Antalya, as well as to neighboring regional centers.
+
+As of 2025, the recovery process is not yet complete, and significant differences are observed between provinces. While some provinces have approached or exceeded their pre-earthquake demographic trends, the provinces that suffered the heaviest destruction continue to lag behind expected population levels. When migration flows to Ankara are examined, it is seen that inflows from earthquake zones increased significantly in 2023, but the total net migration continues to be shaped by movements from other provinces.
+
+# References {.unnumbered}
+
+Turkish Statistical Institute (TÜİK). (2026). *Address Based Population Registration System Results, 2025*. TÜİK Data Portal. Retrieved from the TÜİK official data portal.
+
+Turkish Statistical Institute (TÜİK). (2026). *Internal Migration Statistics*. TÜİK Data Portal. Retrieved from the TÜİK official data portal.
+
+Disaster and Emergency Management Presidency (AFAD). (2023). *February 6, 2023 Kahramanmaraş Earthquakes and Damage Assessment Data*. Republic of Türkiye Ministry of Interior, AFAD.
+
+Presidency of Strategy and Budget. (2023). *2023 Kahramanmaraş and Hatay Earthquakes Report*. Republic of Türkiye Presidency of Strategy and Budget.
+
+Alpers, K. (n.d.). *Turkey Maps GeoJSON: tr-cities.json*. GitHub repository.
