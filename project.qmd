@@ -30,6 +30,9 @@ execute:
   message: false
 ---
 
+📄 [Download Academic Paper (PDF)](report.pdf)
+
+
 ```{r setup}
 #| include: false
 
@@ -362,15 +365,22 @@ htmltools::HTML(glue::glue('
 
 # Abstract {.unnumbered}
 
-<!-- Write your abstract here in your own words. Mention the topic, data sources, method, and main result in one short paragraph. -->
-
+This study examines the demographic impacts of the earthquakes centered in Kahramanmaraş that occurred on February 6, 2023. The study utilized population and damage intensity data obtained from reliable sources such as TÜİK and AFAD. By examining various effects, including population structure and inter-provincial migration patterns, the study conducted damage intensity analysis, migration flow analysis, time series analysis, and recovery status analysis. Focusing on the period between 2018 and 2025, the study reveals a significant population loss and strong migration movements in provinces with high damage intensity. Furthermore, an examination of the recovery process indicates that recovery from earthquake damage takes longer in certain provinces with high damage intensity, and that the pace of recovery varies across all provinces.
 # Introduction
 
-<!-- Write the problem context and research questions here in your own words. -->
+The earthquakes that struck on February 6, 2023, with magnitudes of 7.7 and 7.6 and centered in Kahramanmaraş, are considered one of the largest disasters in Turkey’s recent history. The earthquakes in the region caused widespread destruction across a large geographical area. It has not only caused physical destruction but has also led to significant changes in the region’s social, economic, and demographic structures. Following the disaster, people were forced to leave their homes, leading to a large-scale internal migration. This study examines 11 provinces affected by the earthquake. The study aims not only to demonstrate the extent of the damage but also to analyze its impact on population and migration patterns.
+Within this scope, a study was conducted focusing on the following research questions: 
+•	Which provinces have been the destination for population movements after the earthquake?
+•	Have migration flows concentrated in major cities, or have they been directed toward nearby regions based on geographical proximity?
+•	What is the level of recovery in the earthquake-affected provinces during the period following the earthquake?
+•	Have the provinces managed to return to their expected population trends by 2025?
+These research questions aim to provide a more comprehensive assessment of the relationship between the damage caused by the earthquake and demographic changes.
 
 # Data and Preprocessing
 
-<!-- Explain the nature of each dataset, why it was selected, and how the data was imported and cleaned. -->
+In this study, analyses were conducted by combining data from various sources. The datasets used are structured in a way that allows for the analysis of damage, population, and migration flows together. 
+Various preprocessing steps were applied during the data preparation process. For example, all province names were converted to a standard format, operations such as population-weighted ratios and net migration calculations were performed.
+These processed data structures were saved in .RData format for future reuse.
 
 The final processed dataset is available here:  
 [Download final RData file](final_earthquake_migration_project.RData)
@@ -407,12 +417,10 @@ tibble(
 
 # Exploratory Data Analysis
 
-<!-- Introduce the EDA section in your own words. -->
-
+In this section, the first phase of the analysis was conducted. The overall situation was assessed by examining the general trends in the data and addressing the damage and population changes caused by the earthquake.
 ## Damage Intensity
 
-<!-- Explain what this map shows and why damage per 1,000 residents is used. -->
-
+This map illustrates the extent of damage caused by earthquakes in the region across the affected provinces. The 11 earthquake-affected provinces are color-coded based on the number of heavy/collapsed housing per 1,000 people. The darker the color of a province, the more severe the damage relative to its population. Hatay, which experienced the most severe destruction, is shown in a dark shade, with a heavy/destroyed housing density of 127.7 per 1,000 people. The provinces with the next highest levels of damage are Adıyaman at 88.6, Malatya at 88.0, and Kahramanmaraş at 84.4. In provinces such as Diyarbakır, Adana, and Şanlıurfa, the damage is observed to be at a lower rate. The damage has not been distributed equally across all provinces in the region.
 ```{r damage-map}
 #| code-fold: true
 #| eval: !expr knitr::is_html_output()
@@ -563,8 +571,7 @@ ggplot(damage_long, aes(value, label, fill = type)) +
 
 ## Migration Overview
 
-<!-- Explain why net migration rate per 1,000 residents is more comparable than raw net migration. -->
-
+The graph below shows the percentages of homes with light damage, medium damage, and heavy/collapsed damage in the earthquake-affected provinces. The graph is color-coded by damage type, making it possible to observe the damage rates in each province. The total bar length indicates the overall damage intensity for that province. The size of the “heavy/collapsed” section shown in red on the graph indicates that physical destruction has reached a critical level in those provinces.
 ```{r net-migration-rate}
 #| fig-cap: "Net migration rate per 1,000 residents in 2022, 2023, and 2024."
 
@@ -590,10 +597,10 @@ net_migration |>
   )
 ```
 
-
+Accordingly, Hatay, Kahramanmaraş, Malatya, and Adıyaman stand out both in terms of total damage and the intensity of heavy/collapsed damage. The significant rate of heavy damage in Hatay has also had a major impact on migration patterns in that province.
 ## Population Trends
 
-<!-- Explain how the population data is used to observe the demographic break before and after 2023. -->
+The graph below shows the total population change in the 11 earthquake-affected provinces between 2018 and 2025. In 2023, significant population declines were observed particularly in provinces that sustained heavy damage in the earthquake, such as Hatay, Malatya, and Kahramanmaraş. Although signs of recovery were seen in some provinces following the earthquake year, this recovery is not at the same level across all provinces. This graph indicates that the earthquake-affected provinces are still in the process of demographic recovery.
 
 ```{r population-trend}
 #| fig-cap: "Population trend in 11 earthquake-affected provinces, 2018–2025."
@@ -619,15 +626,17 @@ pop |>
   )
 ```
 
-
+The chart below compares the baseline year (2022), the earthquake year (2023), and the first recovery year (2024). An analysis of migration patterns in the earthquake-affected provinces during these years indicates that Malatya, Hatay, Kahramanmaraş, and Adıyaman experienced significant population loss in 2023.
 # Main Analysis
 
-<!-- Introduce the main analysis section in your own words. -->
+In this section, detailed analyses were conducted to provide answers to the research questions. The analyses examine the destinations of population flows after the earthquake, changes in the population, and the demographic effects of physical damage.
+In this context, migration movements from the earthquake-affected provinces were first examined to determine the destinations of these flows, and the provinces receiving the highest levels of migration were identified. One of the key assessments in the study evaluated the effects of the level of physical damage on population loss.
+Finally, the recovery process was examined to assess the degree to which the earthquake-affected provinces have been able to return to expected population trends.
 
 ## Interactive Migration Flow Map
 
-<!-- Explain what the map shows. Mention that it is available in the HTML version. -->
-
+The map below shows out-migration flows from provinces affected by the 2023 earthquake. By using the filters on the map, you can view out-migration flows from a selected earthquake-affected province. 
+The blue dots on the map, which indicate destination provinces, increase in size based on the volume of migration to that province. It is evident that major cities such as Istanbul, Ankara, Izmir, Antalya, and Mersin serve as significant migration destinations and are highly preferred. Additionally, provinces located in the same geographical area as earthquake-affected regions, such as Konya, Kayseri, and Mardin, have also become important destinations.
 ```{r migration-flow-map}
 #| echo: true
 #| warning: false
@@ -891,7 +900,6 @@ flows_2023 |>
 
 ## Top Receiving Provinces
 
-<!-- Explain the ranking of top destination provinces. -->
 
 ```{r top-destinations}
 #| fig-cap: "Top destination provinces receiving migrants from earthquake provinces in 2023."
